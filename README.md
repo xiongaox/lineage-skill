@@ -148,6 +148,10 @@ Capture → Cite → Compress → Connect → Codify → Evaluate
 ## 文档
 
 - [SKILL.md](./SKILL.md) — Agent 使用入口和执行规则
+- [docs/capabilities.md](./docs/capabilities.md) — 当前能力、边界和路线
+- [docs/configuration.md](./docs/configuration.md) — 环境变量说明
+- [docs/mineru-ocr.md](./docs/mineru-ocr.md) — PDF / MinerU / OCR 工作流
+- [docs/course-package.md](./docs/course-package.md) — CoursePackage 结构
 - [METHODOLOGY.md](./METHODOLOGY.md) — C5 + Evaluate 方法论
 - [THEORETICAL_FOUNDATION.md](./THEORETICAL_FOUNDATION.md) — 理论基础
 - [SKILL_MODES.md](./SKILL_MODES.md) — 多模式 Skill 设计
