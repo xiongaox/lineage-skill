@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Lineage Skill local secrets and generated course outputs
+.env.*
+!.env.example
+output/
+tmp/
+*/transcripts/
+*/analysis/
+*/course_package.json
+*/course_distillation_*.md
+*/course_distillation_*.json
+*/lesson_summaries.json
+*/full_transcript.md

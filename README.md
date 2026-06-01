@@ -244,22 +244,28 @@ python scripts/build_course_skill.py \
 
 ## 环境变量
 
-创建 `.env`：
+复制 `.env.example` 为 `.env`，只填写实际使用的 provider。`.env` 不应提交到仓库。
+
+```bash
+cp .env.example .env
+```
+
+核心变量：
 
 ```bash
 # 语音转录：OpenAI-compatible /audio/transcriptions
-AUDIO_TRANSCRIBE_API_KEY=xxx
+AUDIO_TRANSCRIBE_API_KEY=
 AUDIO_TRANSCRIBE_BASE_URL=https://your-audio-endpoint/v1
 AUDIO_TRANSCRIBE_MODEL=whisper-1
 
 # 视频/图片分析：OpenAI-compatible chat completions with vision support
-LINEAGE_VISION_API_KEY=xxx
+LINEAGE_VISION_API_KEY=
 LINEAGE_VISION_BASE_URL=https://your-vision-endpoint/v1
 LINEAGE_VISION_MODEL=gpt-4o
 LINEAGE_VISION_TIMEOUT=600
 
 # 文本蒸馏：OpenAI-compatible chat completions
-LINEAGE_TEXT_API_KEY=xxx
+LINEAGE_TEXT_API_KEY=
 LINEAGE_TEXT_BASE_URL=https://your-text-endpoint/v1
 LINEAGE_TEXT_MODEL=gpt-4o
 LINEAGE_TEXT_MAX_TOKENS=4096
@@ -268,6 +274,20 @@ LINEAGE_TEXT_TIMEOUT=300
 # 可选：不用 LLM，使用本地抽取式 fallback
 DISTILL_USE_LLM=0
 ```
+
+可选 PDF / OCR / MinerU 配置：
+
+```bash
+# 只在接入扫描 PDF 或版面解析流水线时需要
+MINERU_API_TOKEN=
+MINERU_API_BASE=https://mineru.net/api/v4
+MINERU_MODEL_VERSION=vlm
+MINERU_ENABLE_FORMULA=false
+MINERU_ENABLE_TABLE=false
+MINERU_LANGUAGE=ch
+```
+
+注意：这些变量只放占位名和公开 API base，不写真实 token、私有路径、课程名称或历史蒸馏内容。
 
 系统依赖：
 
@@ -281,7 +301,7 @@ Python 依赖：
 pip install -r requirements.txt
 ```
 
-如需处理 PDF/扫描件参考实现，还会用到 `PyMuPDF`、MinerU API 或视觉 OCR。
+如需处理 PDF/扫描件，推荐后续接入 MinerU 或视觉 OCR。当前主流水线已经为这些可选配置预留环境变量，但不会把真实密钥、私有目录或课程内容写进仓库。
 
 ## 生成后的 Skill 怎么用
 
