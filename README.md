@@ -4,7 +4,7 @@
 
 **把任意课程蒸馏成可对话、可溯源、可复用的 AI Skill。**
 
-面向 Codex / Claude Code / OpenClaw / 自定义 Agent 的通用课程蒸馏框架：  
+面向 Codex / Claude Code / OpenClaw / Hermes / 自定义 Agent 的通用课程蒸馏框架：  
 视频、音频、讲义、PDF、截图证据进来，生成 `CoursePackage`，再按用途包装成不同模式的专家 Skill。
 
 [![GitHub stars](https://img.shields.io/github/stars/JuneYaooo/lineage-skill?style=flat)](https://github.com/JuneYaooo/lineage-skill/stargazers)
@@ -344,4 +344,3 @@ MINERU_MODEL_VERSION=vlm
 ## License
 
 Apache License 2.0. See [LICENSE](./LICENSE).
-
