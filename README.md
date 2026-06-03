@@ -159,4 +159,4 @@ https://raw.githubusercontent.com/JuneYaooo/lineage-skill/main/docs/install.md
 
 本项目采用 [PolyForm Noncommercial License 1.0.0](./LICENSE) 授权。
 
-开源和非商业使用可以。商业使用请联系 <juneyaooo@gmail.com> 获取授权。
+开源和非商业使用可以。商业使用或者商务合作请联系 <juneyaooo@gmail.com>。
