@@ -149,8 +149,14 @@ https://raw.githubusercontent.com/JuneYaooo/lineage-skill/main/docs/install.md
 
 [nihaisha-tcm](https://github.com/JuneYaooo/nihaisha-tcm) 是通过这类课程蒸馏流程沉淀出来的真实 Skill 项目，来源包含 **100GB+ 视频课程材料**，最终整理成可触发、可检索、可溯源的专门领域 Skill。
 
+## 开源引用
+
+如果你使用 `lineage-skill` 蒸馏课程并开源生成的 Skill，建议在生成项目的 README 或说明中引用本仓库，方便后来者追溯生成方法和工具来源。
+
+也欢迎在本仓库的 Issue 里分享你蒸馏出来的优质开源 Skill 或课程知识项目。
+
 ## License
 
 本项目采用 [PolyForm Noncommercial License 1.0.0](./LICENSE) 授权。
 
-允许非商业使用。商业使用需要单独授权。
+开源和非商业使用可以。商业使用请联系 <juneyaooo@gmail.com> 获取授权。

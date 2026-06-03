@@ -110,6 +110,7 @@ After generation, verify:
 
 Check:
 
+- `lineage_manifest.json` exists and includes `generated_by.id: lineage-skill`.
 - `references/course_package.json` exists.
 - `references/evidence_map.json` exists.
 - `references/lesson_index.json` exists.

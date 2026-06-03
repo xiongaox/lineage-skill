@@ -38,6 +38,12 @@ BASE_REFERENCES = [
     "study_paths.md",
 ]
 
+GENERATOR_ID = "lineage-skill"
+GENERATOR_REPOSITORY = "https://github.com/JuneYaooo/lineage-skill"
+GENERATOR_SCRIPT = "scripts/build_course_skill.py"
+GENERATOR_SCHEMA_VERSION = "0.1"
+PROVENANCE_WATERMARK = "lineage-skill:course-skill-builder:v0.1"
+
 MODE_SPECS = {
     "course-expert": {
         "label": "Course Expert",
@@ -523,6 +529,36 @@ def write_mode_references(references_dir: Path, modes: list[str]) -> dict[str, s
     return statuses
 
 
+def build_lineage_manifest(
+    course_name: str,
+    skill_name: str,
+    modes: list[str],
+    source_dir: Path,
+    statuses: dict[str, str],
+) -> dict[str, object]:
+    generated_at = dt.datetime.now().isoformat(timespec="seconds")
+    return {
+        "schema_version": GENERATOR_SCHEMA_VERSION,
+        "course_name": course_name,
+        "skill_name": skill_name,
+        "modes": modes,
+        "source_dir": str(source_dir),
+        "generated_at": generated_at,
+        "generated_by": {
+            "id": GENERATOR_ID,
+            "repository": GENERATOR_REPOSITORY,
+            "script": GENERATOR_SCRIPT,
+        },
+        "provenance": {
+            "watermark": PROVENANCE_WATERMARK,
+            "watermark_visibility": "manifest-only",
+            "source_package": str(source_dir / "course_package.json"),
+            "note": "This packaged course Skill was generated from course materials by lineage-skill.",
+        },
+        "reference_status": statuses,
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Package prepared course materials as a Codex skill.")
     parser.add_argument("--course-name", required=True, help="Human-readable course name.")
@@ -605,14 +641,7 @@ def main() -> None:
 
     build_search_script(scripts_dir / "search_course_notes.py")
 
-    manifest = {
-        "course_name": args.course_name,
-        "skill_name": skill_name,
-        "modes": modes,
-        "source_dir": str(source_dir),
-        "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
-        "reference_status": statuses,
-    }
+    manifest = build_lineage_manifest(args.course_name, skill_name, modes, source_dir, statuses)
     (skill_dir / "lineage_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"Generated skill: {skill_dir}")

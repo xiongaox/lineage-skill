@@ -19,6 +19,14 @@
 └── scripts/
     └── search_course_notes.py
 
+lineage_manifest.json 是生成产物的轻量溯源水印：
+
+- generated_by.id: lineage-skill
+- generated_by.repository: https://github.com/JuneYaooo/lineage-skill
+- generated_by.script: scripts/build_course_skill.py
+- provenance.watermark: lineage-skill:course-skill-builder:v0.1
+- provenance.watermark_visibility: manifest-only
+
 SKILL.md 应包含：
 
 - skill 触发条件

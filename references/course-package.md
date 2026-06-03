@@ -56,6 +56,14 @@ python scripts/build_course_skill.py \
   --output-dir ./dist
 ```
 
+Generated Skills include a root `lineage_manifest.json`. Treat it as the provenance watermark for the generated Skill:
+
+- `generated_by.id`: `lineage-skill`
+- `generated_by.repository`: generator repository
+- `generated_by.script`: generator script
+- `provenance.watermark`: stable generator watermark
+- `provenance.watermark_visibility`: usually `manifest-only`
+
 ## Design Rules
 
 - Keep the package course-agnostic.
