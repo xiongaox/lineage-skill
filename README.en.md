@@ -225,40 +225,6 @@ Turn this course into mentor,practitioner roles.
 It should help me study like a mentor and also produce practical checklists.
 ```
 
-## How To Describe Your Materials
-
-You do not need to organize everything perfectly in advance. Just tell the Agent
-what you have:
-
-```text
-Materials:
-- Video course directory with mp4 files
-- PDF handout directory
-- My own study notes
-
-Goal:
-- Answer according to the course's original intent
-- Keep sources
-- Organize cases and practical steps
-```
-
-For large materials:
-
-```text
-First inspect the material structure. Tell me what is missing, what can be done,
-and which part you recommend processing first.
-```
-
-## Boundaries
-
-This Skill should answer primarily from your course materials. If the course does
-not clearly cover something, the Agent should say so instead of presenting model
-inference as the course's intent.
-
-For medical, legal, financial, investment, or other high-risk domains, the Skill
-is for learning organization and source lookup only. It is not a substitute for
-professional advice.
-
 ## Real Example
 
 [nihaisha-tcm](https://github.com/JuneYaooo/nihaisha-tcm) is a real Skill project
