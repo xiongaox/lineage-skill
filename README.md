@@ -284,6 +284,11 @@ MINERU_API_TOKEN=
 
 也欢迎在本仓库的 Issue 里分享你蒸馏出来的优质开源 Skill 或课程知识项目。
 
+## 致谢
+
+- [Datawhale](https://github.com/datawhalechina) — 感谢 Datawhale 开源社区长期在 AI 教育、开源课程和学习者社区建设上的投入与启发。
+- [LINUX DO — 中文开发者社区](https://linux.do/) — 感谢 LINUX DO 社区的讨论、反馈和传播支持，也欢迎大家在社区里交流课程蒸馏与 Agent Skill 实践。
+
 ## License
 
 本项目采用 [PolyForm Noncommercial License 1.0.0](./LICENSE) 授权。

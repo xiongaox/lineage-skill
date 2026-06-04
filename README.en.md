@@ -263,6 +263,11 @@ so others can trace the method and tooling.
 You are also welcome to share high-quality open-source Skills or course knowledge
 projects in this repository's Issues.
 
+## Acknowledgements
+
+- [Datawhale](https://github.com/datawhalechina) — thanks to the Datawhale open-source community for its long-running work in AI education, open courses, and learner-centered community building.
+- [LINUX DO — Chinese Developer Community](https://linux.do/) — thanks to the LINUX DO community for discussion, feedback, and distribution support. The community is also a good place to discuss course distillation and Agent Skill practice.
+
 ## License
 
 This project is licensed under the
