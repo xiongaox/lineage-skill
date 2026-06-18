@@ -208,6 +208,100 @@ def copy_or_stub(source: Path | None, destination: Path, title: str, body: str) 
     return "stubbed"
 
 
+def build_readme_md(course_name: str, skill_name: str, destination: Path) -> None:
+    content = f"""<div align="center">
+
+# {skill_name}
+
+**把 {course_name} 整理成可检索、可追溯、有安全边界的 Agent Skill。**
+
+装进 agent 后，可以用自然语言按课程模块、课次或板书截图检索课程资料，输出学习型辨证梳理、逐课复习计划和截图证据索引。
+
+[![Skill](https://img.shields.io/badge/Agent-Skill-orange.svg)](./SKILL.md)
+[![Course](https://img.shields.io/badge/course-distilled-blue.svg)](./references/course_digest.md)
+
+</div>
+
+---
+
+## 课程蒸馏
+
+本项目由 `lineage-skill` 自动蒸馏生成。包含了完整的课程笔记、截图证据以及核心大纲。
+
+## 包含内容
+
+- **课程笔记**：可在 `references/` 目录下找到提炼的笔记、词汇表和证据映射。
+- **截图证据**：原视频分析提取的所有关键帧截图已归档至 `assets/screenshots/`。大模型可通过 `references/screenshot-evidence.md` 索引到具体图片。
+- **Agent 配置**：包含 `SKILL.md` 和 `agents/` 配置，支持无缝加载到您的智能体中。
+
+## 如何使用
+
+将本文件夹作为 Skill 挂载给 Agent，您便可以直接让它：
+- "帮我复习 {course_name} 里的重要知识点。"
+- "找一下相关的板书截图。"
+- "根据课程总结一套操作流程。"
+"""
+    destination.write_text(content, encoding="utf-8")
+
+
+def copy_and_build_screenshot_evidence(source_dir: Path, skill_dir: Path, references_dir: Path) -> dict[str, str]:
+    screenshots_src = source_dir / "analysis" / "screenshots"
+    evidence_dst = references_dir / "screenshot-evidence.md"
+    screenshots_dst_base = skill_dir / "assets" / "screenshots"
+    
+    if not screenshots_src.exists():
+        evidence_dst.write_text("# 截图证据索引\n\n暂无截图证据。\n", encoding="utf-8")
+        return {"assets/screenshots": "none", "screenshot-evidence.md": "stubbed"}
+
+    lines = [
+        f"# 截图证据索引",
+        "> 来源：视频分析过程中提取的关键帧。",
+        "> 用于检索课程画面证据。",
+        ""
+    ]
+    
+    img_count = 0
+    for lesson_dir in sorted(screenshots_src.iterdir()):
+        if not lesson_dir.is_dir():
+            continue
+            
+        images = sorted(lesson_dir.glob("*.jpg")) + sorted(lesson_dir.glob("*.webp")) + sorted(lesson_dir.glob("*.png"))
+        if not images:
+            continue
+            
+        lines.append(f"## {lesson_dir.name}\n")
+        
+        lesson_dst_dir = screenshots_dst_base / lesson_dir.name
+        lesson_dst_dir.mkdir(parents=True, exist_ok=True)
+        
+        for idx, img in enumerate(images, start=1):
+            desc = img.stem
+            ts_match = re.match(r"^(\d{2}_\d{2}(?:_\d{2})?)_(.*)$", desc)
+            if ts_match:
+                ts = ts_match.group(1).replace('_', ':')
+                text = ts_match.group(2)
+            else:
+                ts = "未知"
+                text = desc
+
+            new_ext = img.suffix
+            new_filename = f"{idx:04d}{new_ext}"
+            new_rel_path = f"assets/screenshots/{lesson_dir.name}/{new_filename}"
+            
+            shutil.copy2(img, lesson_dst_dir / new_filename)
+            img_count += 1
+            
+            lines.append(f"- `{ts}` [{text}]")
+            lines.append(f"  - 截图路径：{new_rel_path}\n")
+            
+    if img_count == 0:
+        evidence_dst.write_text("# 截图证据索引\n\n暂无截图证据。\n", encoding="utf-8")
+        return {"assets/screenshots": "none", "screenshot-evidence.md": "stubbed"}
+
+    evidence_dst.write_text("\n".join(lines), encoding="utf-8")
+    return {"assets/screenshots": f"copied {img_count} images", "screenshot-evidence.md": "generated"}
+
+
 def normalize_lessons(data: object | None) -> list[dict[str, object]]:
     if data is None:
         return []
@@ -680,10 +774,12 @@ def main() -> None:
     references_dir.mkdir(parents=True, exist_ok=True)
     scripts_dir.mkdir(parents=True, exist_ok=True)
 
+    build_readme_md(args.course_name, skill_name, skill_dir / "README.md")
     build_skill_md(args.course_name, skill_name, args.description, modes, skill_dir / "SKILL.md")
     build_agent_metadata(args.course_name, skill_name, modes, agents_dir)
 
     statuses = {}
+    statuses.update(copy_and_build_screenshot_evidence(source_dir, skill_dir, references_dir))
     statuses["course_package.json"] = copy_course_package(source_dir, references_dir / "course_package.json")
     statuses["course_digest.md"] = copy_or_stub(
         find_course_distillation_md(source_dir),

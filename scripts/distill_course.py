@@ -38,21 +38,10 @@ DOMAIN_TERMS = [
 
 def call_llm(messages: list) -> str:
     import time as _time
-    timeout = int(os.getenv("DISTILL_LLM_TIMEOUT", "240"))
-    old_handler = signal.getsignal(signal.SIGALRM)
-
-    def _raise_timeout(signum, frame):
-        raise TimeoutError(f"LLM 调用超过 {timeout}s")
 
     for attempt in range(5):
         try:
-            signal.signal(signal.SIGALRM, _raise_timeout)
-            signal.alarm(timeout)
-            try:
-                return call_text_llm(messages)
-            finally:
-                signal.alarm(0)
-                signal.signal(signal.SIGALRM, old_handler)
+            return call_text_llm(messages)
         except Exception as e:
             err = str(e)
             if "429" in err or "rate" in err.lower():

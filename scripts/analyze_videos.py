@@ -12,7 +12,7 @@ from pathlib import Path
 from datetime import datetime
 
 from dotenv import load_dotenv
-from llm_client import analyze_video_with_vision_model
+from llm_client import analyze_video_with_vision_model, analyze_images_with_vision_model
 
 load_dotenv()
 
@@ -165,7 +165,25 @@ def analyze_chunk(chunk_path: str, chunk_idx: int, total: int, offset_sec: float
     final_mb = os.path.getsize(work_path) / (1024 * 1024)
     print(f"  🤖 {label} ({chunk_dur/60:.0f}min, {final_mb:.0f}MB) ...")
 
-    result = analyze_video_with_vision_model(work_path, prompt)
+    # Extract frames for OpenAI-compatible vision API
+    import glob
+    frame_dir = os.path.join(tmp_dir, f"frames_{chunk_idx}")
+    os.makedirs(frame_dir, exist_ok=True)
+    # Extract 1 frame every 15 seconds to keep token usage reasonable, and burn timestamp into the frame
+    cmd_extract = [
+        FFMPEG, "-y", "-i", work_path,
+        "-vf", "fps=1/15,drawtext=fontfile='C\:/Windows/Fonts/arial.ttf':text='%{pts\:hms}':x=10:y=10:fontsize=48:fontcolor=white:box=1:boxcolor=black@0.5",
+        "-q:v", "5", os.path.join(frame_dir, "frame_%04d.jpg")
+    ]
+    subprocess.run(cmd_extract, capture_output=True)
+    frames = sorted(glob.glob(os.path.join(frame_dir, "*.jpg")))
+    
+    if not frames:
+        print("  ⚠️ 抽帧失败，回退到原始视频流")
+        result = analyze_video_with_vision_model(work_path, prompt)
+    else:
+        print(f"  📸 抽取了 {len(frames)} 张带时间戳的帧用于分析...")
+        result = analyze_images_with_vision_model(frames, prompt)
 
     content = result.get("content", "")
     if result.get("error"):
