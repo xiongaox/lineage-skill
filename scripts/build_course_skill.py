@@ -297,16 +297,26 @@ def build_evidence_map(source_dir: Path, destination: Path) -> str:
     transcript_files = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("transcripts/**/*.json"))
     analysis_files = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("analysis/**/*_analysis.md"))
     screenshot_files = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("analysis/screenshots/**/*") if p.is_file())
+    keyframe_manifests = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("keyframe_selection/*_model_keyframes_manifest.json"))
+    keyframe_summaries = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("keyframe_selection/model_keyframe_summary.md"))
+    selected_keyframes = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("keyframes_model_selected/**/*") if p.is_file())
     course_distillations = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("course_distillation_*.*"))
     document_files = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("documents/**/*") if p.is_file())
+    text_source_files = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("text_sources/**/*") if p.is_file())
+    text_distillation_files = sorted(str(p.relative_to(source_dir)) for p in source_dir.glob("text_distillation/**/*") if p.is_file())
     payload = {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "source_dir": str(source_dir),
         "transcripts": transcript_files,
         "analysis_files": analysis_files,
         "screenshots": screenshot_files,
+        "model_keyframe_manifests": keyframe_manifests,
+        "model_keyframe_summaries": keyframe_summaries,
+        "model_selected_keyframes": selected_keyframes,
         "course_distillations": course_distillations,
         "documents": document_files,
+        "text_sources": text_source_files,
+        "text_distillation": text_distillation_files,
         "notes": [
             "Evidence entries are file-level by default.",
             "Add timestamps and topic labels after deeper course distillation.",
@@ -314,6 +324,80 @@ def build_evidence_map(source_dir: Path, destination: Path) -> str:
     }
     destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return "generated"
+
+
+def copy_optional_reference_dirs(source_dir: Path, references_dir: Path) -> dict[str, str]:
+    statuses = {}
+    for dirname in [
+        "transcripts",
+        "analysis",
+        "documents",
+        "text_sources",
+        "text_distillation",
+        "keyframe_selection",
+        "keyframes_model_selected",
+    ]:
+        src = source_dir / dirname
+        dst = references_dir / dirname
+        if not src.exists():
+            continue
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(
+            src,
+            dst,
+            ignore=shutil.ignore_patterns(
+                "__pycache__",
+                "*.mp4",
+                "*.m4s",
+                "*.mp3",
+                "*.wav",
+                "*.mov",
+                "*.mkv",
+                "*.webm",
+            ),
+        )
+        statuses[f"{dirname}/"] = "copied"
+    return statuses
+
+
+def copy_source_courses_from_package(source_dir: Path, references_dir: Path) -> dict[str, str]:
+    package = load_json_if_exists(source_dir / "course_package.json")
+    manifest = package.get("manifest", {}) if isinstance(package, dict) and isinstance(package.get("manifest"), dict) else {}
+    source_courses = manifest.get("source_courses") if isinstance(manifest.get("source_courses"), list) else []
+    if not source_courses:
+        return {}
+
+    source_courses_dir = references_dir / "source_courses"
+    if source_courses_dir.exists():
+        shutil.rmtree(source_courses_dir)
+    source_courses_dir.mkdir(parents=True, exist_ok=True)
+
+    statuses = {}
+    for course in source_courses:
+        if not isinstance(course, dict) or not course.get("source_dir"):
+            continue
+        src = Path(str(course["source_dir"])).expanduser().resolve()
+        if not src.exists() or not src.is_dir():
+            statuses[f"source_courses/{src.name}/"] = "missing"
+            continue
+        dst = source_courses_dir / src.name
+        shutil.copytree(
+            src,
+            dst,
+            ignore=shutil.ignore_patterns(
+                "__pycache__",
+                "*.mp4",
+                "*.m4s",
+                "*.mp3",
+                "*.wav",
+                "*.mov",
+                "*.mkv",
+                "*.webm",
+            ),
+        )
+        statuses[f"source_courses/{src.name}/"] = "copied"
+    return statuses
 
 
 def copy_course_package(source_dir: Path, destination: Path) -> str:
@@ -463,6 +547,7 @@ Active role(s): {mode_labels}.
 - Distinguish course content from your own inference.
 - Prefer precise lesson, transcript, analysis, screenshot, or quote references when available.
 - If the packaged materials do not support an answer, say what is missing instead of inventing details.
+- For visual claims, prefer model-selected keyframes when available; cite the image path, approximate timestamp, and manifest path.
 
 ## Role Focus
 
@@ -478,6 +563,10 @@ Active role(s): {mode_labels}.
 6. `references/study_paths.md` for review plans and learning routes.
 7. `references/course_package.json` for normalized package objects when structured lookup is needed.
 8. `references/full_transcript.md` for original wording when detailed citation is required.
+9. `references/keyframe_selection/model_keyframe_summary.md` for model-selected visual evidence when present.
+10. `references/keyframe_selection/` and `references/keyframes_model_selected/` for image manifests and selected frame files when present.
+11. `references/text_distillation/evidence_cards.jsonl` and `references/text_sources/chunks.jsonl` for pure-text evidence cards and source chunks when present.
+12. `references/transcripts/`, `references/analysis/`, and `references/documents/` for packaged source evidence directories when present.
 
 ## Response Rules
 
@@ -720,6 +809,8 @@ def main() -> None:
     )
     statuses["lesson_index.json"] = build_lesson_index(source_dir, references_dir / "lesson_index.json")
     statuses["evidence_map.json"] = build_evidence_map(source_dir, references_dir / "evidence_map.json")
+    statuses.update(copy_optional_reference_dirs(source_dir, references_dir))
+    statuses.update(copy_source_courses_from_package(source_dir, references_dir))
     statuses.update(write_mode_references(references_dir, modes))
 
     build_search_script(scripts_dir / "search_course_notes.py")

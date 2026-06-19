@@ -22,7 +22,7 @@
     ▼
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ Stage 2：画面分析 + 干货截图                                    │
+│ Stage 2：画面分析                                                │
 │ scripts/analyze_videos.py                                        │
 ├─────────────────────────────────────────────────────────────────┤
 │ python scripts/analyze_videos.py \                              │
@@ -32,13 +32,29 @@
 │                                                                 │
 │ 输出：                                                          │
 │ <course>/analysis/*_analysis.md                                 │
-│ <course>/analysis/screenshots/<video>/*.jpg                     │
+│ <course>/analysis/screenshots/<video>/*.jpg（如果模型给出标记） │
 └─────────────────────────────────────────────────────────────────┘
     │
     ▼
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ Stage 3：课程蒸馏                                                │
+│ Stage 3：模型精选关键帧                                          │
+│ scripts/select_video_keyframes.py                                │
+├─────────────────────────────────────────────────────────────────┤
+│ python scripts/select_video_keyframes.py \                       │
+│   --input-dir <视频目录> \                                      │
+│   --course-name <课程名称>                                      │
+│                                                                 │
+│ 输出：                                                          │
+│ <course>/keyframe_selection/model_keyframe_summary.md            │
+│ <course>/keyframe_selection/*_model_keyframes_manifest.json      │
+│ <course>/keyframes_model_selected/<video>/*.jpg                  │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Stage 4：课程蒸馏                                                │
 │ scripts/distill_course.py                                        │
 ├─────────────────────────────────────────────────────────────────┤
 │ python scripts/distill_course.py \                              │
@@ -54,7 +70,7 @@
     ▼
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ Stage 4：生成专家 Skill                                          │
+│ Stage 5：生成专家 Skill                                          │
 │ scripts/build_course_skill.py                                    │
 ├─────────────────────────────────────────────────────────────────┤
 │ python scripts/build_course_skill.py \                          │

@@ -116,9 +116,10 @@
 | 视频 / 音频转录 | 从 `.mp4` 提取音频，或直接转录 `.mp3`、`.wav`、`.m4a` 等音频；长音频会自动分段 | `transcripts/*.json` |
 | 视频视觉理解 | 调用视觉模型分析 PPT、板书、软件界面、图表、动作示范和关键画面 | `analysis/*_analysis.md` |
 | 大视频处理 | 对大视频压缩、按时间分片，降低模型上传和理解压力 | 分片分析结果 |
-| 干货截图提取 | 让视觉模型标记值得回看的画面，再从原视频抽帧；相似截图会去重 | `analysis/screenshots/` |
+| 模型精选关键帧 | 先生成密集候选帧，再让多模态视觉模型从 contact sheet 中选择真正有证据价值的关键帧；等间隔只作为候选池，不作为最终证据规则 | `keyframe_selection/`、`keyframes_model_selected/` |
 | PDF / 文档解析 | 接入 MinerU 等 OCR / 文档解析结果，把扫描 PDF、图片 PDF、讲义纳入证据 | `documents/`、`mineru_supplement.md` |
-| 课程蒸馏 | 整合转录、画面分析、截图证据、OCR 和笔记，提炼概念、方法、案例、引用 | `course_distillation_*.md/json` |
+| 纯文字课程蒸馏 | 把 Markdown、TXT、OCR Markdown、手工笔记和讲义分块成可溯源证据卡片，再合并进课程结构 | `text_sources/`、`text_distillation/evidence_cards.jsonl` |
+| 课程蒸馏 | 整合转录、画面分析、模型精选关键帧、OCR 和笔记，提炼概念、方法、案例、引用 | `course_distillation_*.md/json` |
 | CoursePackage 构建 | 把课程蒸馏结果变成统一结构，保留 evidence map、lesson index 和质量信息 | `course_package.json` |
 | 多课程合并 | 把多个课程包合成一个跨课程 Skill 的输入 | combined `course_package.json` |
 | 专属导师 Skill 生成 | 默认生成 `mentor`，也可按用途生成其他角色 | 可安装/调用的课程 Skill |
@@ -225,6 +226,7 @@ MINERU_API_TOKEN=
 | 你的材料 | 至少需要配置 |
 | --- | --- |
 | 已有转录、OCR、笔记 | `LINEAGE_TEXT_*`；如果只做本地抽取式整理，可把 `DISTILL_USE_LLM=0` |
+| 纯 Markdown / TXT / 笔记课程 | `LINEAGE_TEXT_*`；也可先用 `DISTILL_USE_LLM=0` 跑本地证据卡片抽取 |
 | 音频课程 | `AUDIO_TRANSCRIBE_*`、`LINEAGE_TEXT_*`，并安装 `ffmpeg` |
 | 视频课程，只关心老师说了什么 | `AUDIO_TRANSCRIBE_*`、`LINEAGE_TEXT_*`，并安装 `ffmpeg` |
 | 视频课程，还要理解 PPT / 板书 / 软件操作 | `AUDIO_TRANSCRIBE_*`、`LINEAGE_VISION_*`、`LINEAGE_TEXT_*`，并安装 `ffmpeg` |
@@ -252,6 +254,13 @@ MINERU_API_TOKEN=
 ```text
 我已经有课程转录文本、OCR 文档和课程笔记。
 请跳过重新采集，直接整理成可问答、可复习、可检索的课程 Skill。
+```
+
+如果这套课本身就是纯文字资料：
+
+```text
+我只有 Markdown / TXT 讲义和学习笔记，没有视频。
+请用 lineage-skill 做纯文字课程蒸馏，把概念、方法、案例、金句和边界整理成有来源的课程 Skill。
 ```
 
 ### 4. 用自然语言调用它

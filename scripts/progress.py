@@ -12,7 +12,9 @@ from typing import Any
 STAGE_ORDER = [
     "transcribe",
     "analyze",
+    "keyframes",
     "documents",
+    "text_distill",
     "distill",
     "package",
     "build_skill",
@@ -42,7 +44,15 @@ def summarize_artifacts(course_dir: Path, skill_dir: Path | None = None) -> dict
     transcripts = sorted(course_dir.glob("transcripts/*_transcript.json"))
     analyses = sorted(course_dir.glob("analysis/*_analysis.md"))
     screenshots = sorted(path for path in course_dir.glob("analysis/screenshots/**/*") if path.is_file())
+    keyframe_candidates = sorted(path for path in course_dir.glob("keyframe_candidates/**/*.jpg") if path.is_file())
+    model_keyframes = sorted(path for path in course_dir.glob("keyframes_model_selected/**/*.jpg") if path.is_file())
+    keyframe_manifests = sorted(course_dir.glob("keyframe_selection/*_model_keyframes_manifest.json"))
+    keyframe_summaries = sorted(course_dir.glob("keyframe_selection/model_keyframe_summary.md"))
     document_files = sorted(path for path in course_dir.glob("documents/**/*") if path.is_file())
+    text_source_chunks = sorted(course_dir.glob("text_sources/chunks.jsonl"))
+    text_cards = sorted(course_dir.glob("text_distillation/evidence_cards.jsonl"))
+    text_synthesis = course_dir / "text_distillation" / "text_course_synthesis.md"
+    text_quality = course_dir / "text_distillation" / "text_distillation_quality.json"
     distillations = sorted(course_dir.glob("course_distillation_*.*"))
     summary_path = course_dir / "lesson_summaries.json"
     package_path = course_dir / "course_package.json"
@@ -52,7 +62,15 @@ def summarize_artifacts(course_dir: Path, skill_dir: Path | None = None) -> dict
         "transcripts": len(transcripts),
         "visual_analyses": len(analyses),
         "screenshots": len(screenshots),
+        "keyframe_candidates": len(keyframe_candidates),
+        "model_selected_keyframes": len(model_keyframes),
+        "keyframe_manifests": len(keyframe_manifests),
+        "keyframe_summaries": len(keyframe_summaries),
         "document_files": len(document_files),
+        "text_source_chunks": len(text_source_chunks),
+        "text_evidence_cards": len(text_cards),
+        "text_synthesis": text_synthesis.exists(),
+        "text_distillation_quality": text_quality.exists(),
         "mineru_manifest": mineru_manifest.exists(),
         "mineru_supplement": mineru_supplement.exists(),
         "lesson_summaries": summary_path.exists(),

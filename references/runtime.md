@@ -20,6 +20,7 @@ Capture -> Cite -> Compress -> Connect -> Codify -> Evaluate
 Evidence strength:
 
 - Strong: transcript segment, quote index, OCR text, screenshot, or lesson summary all support the claim.
+- Strong visual: model-selected keyframe has timestamp, image path, selection reason, and manifest, ideally corroborated by transcript/OCR.
 - Medium: one direct source supports the claim.
 - Weak: only course-level synthesis supports the claim.
 - Unsupported: no packaged reference supports the claim; say what is missing.
@@ -62,6 +63,7 @@ If a provider is missing, continue with the smallest viable workflow:
 - Raw audio/video without ASR: stop before transcription and list missing variables or tools.
 - Raw video without vision: stop before visual analysis, or continue transcript-only if the user accepts.
 - PDFs without MinerU: use existing OCR/text sources only and say scanned/image PDF evidence was not included.
+- Pure text courses can run without `--input-dir` by using `--text-input`, `--notes-input`, or existing `documents/` with `--include-existing-documents`.
 
 ## CoursePackage
 
@@ -125,6 +127,44 @@ Workflow:
 
 Existing OCR output can be reused with `--skip-submit`.
 
+## Pure Text Distillation
+
+Use the text path when Markdown, TXT, OCR Markdown, handouts, or existing notes should become first-class course evidence.
+
+Expected artifacts:
+
+```text
+text_sources/
+├── source_manifest.json
+└── chunks.jsonl
+text_distillation/
+├── evidence_cards.jsonl
+├── source_summaries.json
+├── text_course_synthesis.md
+└── text_distillation_quality.json
+```
+
+Each chunk records source path, `source_ref`, chunk index, character span, and body SHA-256. Evidence cards are structured as concepts, methods, cases, quotes, boundaries, tasks, and open questions. The package builder merges those cards into `course_package.json` so text/PDF/OCR materials are synthesized, not merely copied.
+
+## Model-Selected Keyframes
+
+Do not treat equal-interval frames as final evidence. For video courses, use this two-stage rule:
+
+1. Extract dense candidate frames into `keyframe_candidates/<media>/`.
+2. Build labeled contact sheets from candidates.
+3. Ask a multimodal vision model to select evidence-worthy frames.
+4. Save per-sheet decisions under `keyframe_selection/<media>/`.
+5. Save per-media manifest as `keyframe_selection/<media>_model_keyframes_manifest.json`.
+6. Copy final selected frames into `keyframes_model_selected/<media>/`.
+7. Write `keyframe_selection/model_keyframe_summary.md` and `model_keyframe_index.json`.
+
+Resume behavior:
+
+- If a media manifest exists and `--force` is not passed, skip that media.
+- If a sheet decision JSON exists and `--force` is not passed, reuse it.
+- Candidate frames are cache artifacts. They can be regenerated from source video and should not be required in generated Skills.
+- The generated Skill should package `keyframe_selection/` and `keyframes_model_selected/`, not raw video or dense candidates.
+
 ## Outputs And Resume
 
 Course build state belongs under `<base-dir>/<course-name>/`; generated Skills belong under `<output-dir>/<skill-name>/`.
@@ -136,7 +176,15 @@ Expected course workspace:
 ├── transcripts/
 ├── analysis/
 │   └── screenshots/
+├── keyframe_candidates/
+├── keyframe_selection/
+│   ├── model_keyframe_summary.md
+│   └── *_model_keyframes_manifest.json
+├── keyframes_model_selected/
 ├── documents/
+├── text_sources/
+├── text_distillation/
+├── index/
 ├── full_transcript.md
 ├── lesson_summaries.json
 ├── course_distillation_<date>.md
@@ -148,6 +196,22 @@ Expected course workspace:
 Resume rules:
 
 - Reuse existing transcripts, analyses, documents, distillation files, and CoursePackage when present.
+- Reuse existing keyframe manifests and per-sheet selection JSON unless `--force` is requested.
 - Do not mix multiple source courses in one `<course-name>` directory unless the user explicitly requests a combined package.
 - Prefer rerunning the narrow missing stage over rebuilding the whole pipeline.
 - Use `lineage_progress.json` to report what exists, what is missing, and what will run next.
+
+Generated Skill evidence layout:
+
+```text
+<generated-skill>/references/
+├── course_package.json
+├── evidence_map.json
+├── keyframe_selection/
+├── keyframes_model_selected/
+├── transcripts/
+├── analysis/
+└── documents/
+```
+
+The exact modality directories may be absent when the source material did not include that modality.

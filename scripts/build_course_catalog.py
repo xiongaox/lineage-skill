@@ -38,7 +38,14 @@ def artifact_counts(course_dir: Path) -> dict[str, int]:
         "transcripts": len(list(course_dir.glob("transcripts/*_transcript.json"))),
         "visual_analyses": len(list(course_dir.glob("analysis/*_analysis.md"))),
         "screenshots": len([path for path in course_dir.glob("analysis/screenshots/**/*") if path.is_file()]),
+        "keyframe_candidates": len([path for path in course_dir.glob("keyframe_candidates/**/*.jpg") if path.is_file()]),
+        "keyframe_manifests": len(list(course_dir.glob("keyframe_selection/*_model_keyframes_manifest.json"))),
+        "keyframe_summaries": len(list(course_dir.glob("keyframe_selection/model_keyframe_summary.md"))),
+        "model_selected_keyframes": len([path for path in course_dir.glob("keyframes_model_selected/**/*.jpg") if path.is_file()]),
         "documents": len([path for path in course_dir.glob("documents/**/*") if path.is_file()]),
+        "text_source_chunks": len(list(course_dir.glob("text_sources/chunks.jsonl"))),
+        "text_evidence_cards": len(list(course_dir.glob("text_distillation/evidence_cards.jsonl"))),
+        "text_synthesis": int((course_dir / "text_distillation" / "text_course_synthesis.md").exists()),
         "distillations": len(list(course_dir.glob("course_distillation_*.*"))),
     }
 
@@ -85,6 +92,7 @@ def build_course_row(course_dir: Path, output_dir: Path) -> dict[str, Any]:
         },
         "latest": {
             "distillation": latest(["course_distillation_*.md"], course_dir),
+            "text_synthesis": latest(["text_distillation/text_course_synthesis.md"], course_dir),
             "course_package": "course_package.json" if (course_dir / "course_package.json").exists() else "",
             "progress": "lineage_progress.json" if (course_dir / "lineage_progress.json").exists() else "",
         },
