@@ -142,9 +142,9 @@ course materials and configure suitable model interfaces.
 | Video / audio transcription | Extracts audio from `.mp4`, or transcribes `.mp3`, `.wav`, `.m4a`, and similar files; long audio is split automatically | `transcripts/*.json` |
 | Video visual understanding | Uses a vision model to analyze slides, whiteboards, software screens, charts, demos, and key frames | `analysis/*_analysis.md` |
 | Large video handling | Compresses and chunks large videos to reduce upload and analysis pressure | Chunked analysis results |
-| Useful screenshot extraction | Lets a vision model mark valuable frames, extracts them from source videos, and deduplicates similar screenshots | `analysis/screenshots/` |
+| Model-selected keyframes | Builds a dense candidate pool, then asks a multimodal vision model to choose evidence-worthy keyframes from labeled contact sheets; equal intervals are only candidates, not the final evidence rule | `keyframe_selection/`, `keyframes_model_selected/` |
 | PDF / document parsing | Integrates MinerU or other OCR/document parsing outputs for scanned PDFs, image PDFs, and handouts | `documents/`, `mineru_supplement.md` |
-| Course distillation | Combines transcripts, visual analysis, screenshot evidence, OCR, and notes into concepts, methods, cases, and citations | `course_distillation_*.md/json` |
+| Course distillation | Combines transcripts, visual analysis, model-selected keyframes, OCR, and notes into concepts, methods, cases, and citations | `course_distillation_*.md/json` |
 | CoursePackage build | Converts distillation results into a unified structure with evidence map, lesson index, and quality metadata | `course_package.json` |
 | Multi-course merge | Combines multiple course packages into one cross-course Skill input | combined `course_package.json` |
 | Dedicated mentor Skill generation | Generates `mentor` by default; other roles are also supported | Installable/callable course Skill |

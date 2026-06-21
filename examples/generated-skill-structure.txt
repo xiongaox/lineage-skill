@@ -15,7 +15,12 @@
 │   ├── concept_glossary.md
 │   ├── evidence_map.json
 │   ├── quote_index.md
-│   └── study_paths.md
+│   ├── study_paths.md
+│   ├── keyframe_selection/          # 可选：模型选帧 manifest 与 summary
+│   ├── keyframes_model_selected/    # 可选：模型精选关键帧图片
+│   ├── transcripts/                 # 可选：打包后的 ASR 证据
+│   ├── analysis/                    # 可选：视频视觉分析
+│   └── documents/                   # 可选：讲义/OCR/文档证据
 └── scripts/
     └── search_course_notes.py
 
@@ -43,6 +48,7 @@ references 应包含：
 - 概念索引
 - 证据索引
 - 学习路径
+- 模型精选关键帧 manifest 与图片路径（当课程含视频时）
 
 不同 mode 会增加额外 references：
 

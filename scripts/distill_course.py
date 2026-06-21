@@ -59,7 +59,9 @@ def call_llm(messages: list) -> str:
 
 
 def llm_enabled() -> bool:
-    return os.getenv("DISTILL_USE_LLM", "1").strip().lower() not in {"0", "false", "no"}
+    if os.getenv("DISTILL_USE_LLM", "1").strip().lower() in {"0", "false", "no"}:
+        return False
+    return bool(os.getenv("LINEAGE_TEXT_API_KEY"))
 
 
 def chunk_text(text: str, chunk_size: int | None = None, overlap: int | None = None) -> list[str]:
@@ -144,7 +146,7 @@ def local_lesson_summary(video: str, text: str, duration_minutes: float) -> str:
 整理说明：以上根据讲话转写自动抽取高权重主题句，适合作为后续人工校订和检索入口。"""
 
 
-def local_course_digest(transcripts: list, summaries: list, course_name: str) -> str:
+def local_course_digest(transcripts: list, summaries: list, course_name: str, text_synthesis: str = "") -> str:
     total_dur = sum(t.get("duration", 0) for t in transcripts)
     all_text = "\n".join(t.get("full_text", "") for t in transcripts)
     keywords = extract_keywords(all_text, 24)
@@ -176,6 +178,15 @@ def local_course_digest(transcripts: list, summaries: list, course_name: str) ->
         if len(quotes) >= 12:
             break
     quote_text = "\n".join(f"- {quote}（{video}）" for video, quote in quotes)
+    text_section = ""
+    if text_synthesis.strip():
+        text_section = f"""
+## 八、文字资料补充
+以下内容来自课程讲义、OCR、Markdown/TXT 笔记或其他纯文字资料，已通过 text_distillation 证据卡片流程整理。
+
+{text_synthesis.strip()}
+"""
+
     return f"""## 一、课程概览
 《{course_name}》共 {len(transcripts)} 课，总时长约 {total_dur/3600:.1f} 小时。本轮为文本优先蒸馏，已基于转写内容生成逐课摘要、关键词、主题入口和复习路径。
 
@@ -201,13 +212,14 @@ def local_course_digest(transcripts: list, summaries: list, course_name: str) ->
 
 ## 七、核心金句集
 {quote_text}
+{text_section}
 """
 
 
 def load_transcripts(course_dir: str) -> list:
     td = os.path.join(course_dir, "transcripts")
     if not os.path.isdir(td):
-        print(f"❌ 转录目录不存在: {td}")
+        print(f"ℹ️ 无转录目录: {td}")
         return []
     transcripts = []
     for f in sorted(os.listdir(td)):
@@ -230,6 +242,66 @@ def load_analyses(course_dir: str) -> list:
                 analyses.append({"video": f.replace("_analysis.md", ""), "content": fp.read()})
     print(f"📄 {len(analyses)} 个分析")
     return analyses
+
+
+def load_keyframe_summary(course_dir: str, max_chars: int = 20000) -> str:
+    path = os.path.join(course_dir, "keyframe_selection", "model_keyframe_summary.md")
+    if not os.path.exists(path):
+        return ""
+    with open(path, encoding="utf-8") as fp:
+        text = fp.read()
+    if len(text) > max_chars:
+        return text[:max_chars] + "\n\n[已截断]"
+    return text
+
+
+def load_text_synthesis(course_dir: str, max_chars: int = 30000) -> str:
+    path = os.path.join(course_dir, "text_distillation", "text_course_synthesis.md")
+    if not os.path.exists(path):
+        return ""
+    with open(path, encoding="utf-8") as fp:
+        text = fp.read()
+    if len(text) > max_chars:
+        return text[:max_chars] + "\n\n[已截断]"
+    return text
+
+
+def load_keyframe_manifest(course_dir: str, video_name: str) -> dict:
+    path = os.path.join(course_dir, "keyframe_selection", f"{video_name}_model_keyframes_manifest.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fp:
+            data = json.load(fp)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def format_keyframe_manifest(manifest: dict, limit: int = 24) -> str:
+    if not manifest:
+        return "（无模型精选关键帧 manifest）"
+    selected = manifest.get("selected") or []
+    if not selected:
+        return (
+            f"候选帧 {manifest.get('candidate_count', 0)} 张，"
+            "模型未选择可作为证据的关键帧。"
+        )
+    lines = [
+        f"候选帧 {manifest.get('candidate_count', 0)} 张，模型精选 {manifest.get('selected_count', len(selected))} 张。",
+        f"Manifest: `keyframe_selection/{manifest.get('media', '')}_model_keyframes_manifest.json`",
+    ]
+    for item in selected[:limit]:
+        keywords = "、".join(str(k) for k in (item.get("keywords") or []) if k)
+        reason = item.get("reason") or ""
+        path = item.get("selected_path") or item.get("candidate_source") or ""
+        prefix = f"- {item.get('timestamp', '')} `{path}`"
+        if keywords:
+            prefix += f" [{keywords}]"
+        lines.append(f"{prefix}: {reason}".rstrip())
+    if len(selected) > limit:
+        lines.append(f"- 另有 {len(selected) - limit} 张精选关键帧，见 manifest。")
+    return "\n".join(lines)
 
 
 def build_per_lesson_summaries(
@@ -299,6 +371,9 @@ def build_per_lesson_summaries(
         # 截图数量
         ss_dir = os.path.join(course_dir, "analysis", "screenshots", vn)
         ss_count = len(os.listdir(ss_dir)) if os.path.isdir(ss_dir) else 0
+        keyframe_manifest = load_keyframe_manifest(course_dir, vn)
+        keyframe_text = format_keyframe_manifest(keyframe_manifest)
+        keyframe_count = keyframe_manifest.get("selected_count", 0) if keyframe_manifest else 0
 
         print(f"  [{i+1}/{len(transcripts)}] {vn} ...")
 
@@ -306,19 +381,23 @@ def build_per_lesson_summaries(
 
 **视频名称**: {vn}
 **时长**: {dur/60:.1f} 分钟
-**视频截图**: {ss_count} 张
+**模型精选关键帧**: {keyframe_count} 张
+**补充截图标记**: {ss_count} 张
 
 ## {transcript_label}
 {snippet}
 
-## 视频画面分析（含截图标记）
+## 模型精选关键帧（优先视觉证据）
+{keyframe_text}
+
+## 视频画面分析（含补充截图标记）
 {analysis if analysis else "（无画面分析数据）"}
 
 生成格式：
 ### {vn}
 [2-3段摘要]
 
-要求：概括核心主题、提取3-5个知识点或观点、引用1-2句金句。画面分析中有截图标记的地方通常对应重点教学内容，优先关注。"""
+要求：概括核心主题、提取3-5个知识点或观点、引用1-2句金句。优先综合讲话转录、视频画面分析和模型精选关键帧；补充截图标记只作为辅助线索，不要把等间隔候选帧当作最终证据。"""
 
         s = call_llm([{"role": "user", "content": prompt}])
         summaries.append({"video": vn, "duration_minutes": round(dur / 60, 1), "summary": s})
@@ -332,7 +411,7 @@ def build_per_lesson_summaries(
     return summaries
 
 
-def build_course_digest(transcripts: list, summaries: list, course_name: str) -> dict:
+def build_course_digest(transcripts: list, summaries: list, course_name: str, course_dir: str) -> dict:
     print(f"\n🧠 课程蒸馏 ...")
     total_dur = sum(t.get("duration", 0) for t in transcripts)
     total_chars = sum(len(t.get("full_text", "")) for t in transcripts)
@@ -341,13 +420,15 @@ def build_course_digest(transcripts: list, summaries: list, course_name: str) ->
         f"### {s['video']} ({s['duration_minutes']}分钟)\n{s['summary']}"
         for s in summaries
     )
+    keyframe_summary = load_keyframe_summary(course_dir)
+    text_synthesis = load_text_synthesis(course_dir)
     full_transcript = "\n\n".join(
         f"# {t.get('video', 'Unknown')}\n{t.get('full_text', '')}"
         for t in transcripts
     )
 
     if not llm_enabled():
-        digest = local_course_digest(transcripts, summaries, course_name)
+        digest = local_course_digest(transcripts, summaries, course_name, text_synthesis=text_synthesis)
         return {
             "course_title": course_name,
             "total_lessons": len(transcripts),
@@ -370,6 +451,14 @@ def build_course_digest(transcripts: list, summaries: list, course_name: str) ->
 ## 所有课程摘要
 
 {summary_text}
+
+## 模型精选关键帧总览
+
+{keyframe_summary if keyframe_summary else "（无模型精选关键帧总览；如课程含视频，应检查 keyframe_selection/model_keyframe_summary.md）"}
+
+## 文字资料证据卡片综合
+
+{text_synthesis if text_synthesis else "（无纯文字资料蒸馏结果；如课程含 PDF OCR、Markdown、TXT 或笔记，应检查 text_distillation/text_course_synthesis.md）"}
 
 请生成以下结构化内容（Markdown 格式）：
 
@@ -398,7 +487,7 @@ def build_course_digest(transcripts: list, summaries: list, course_name: str) ->
 ## 七、核心金句集
 10-15条金句或观点，标注出自哪一课
 
-请确保基于真实摘要内容，不要编造。"""
+请确保基于真实摘要内容和已列出的视觉证据，不要编造。涉及画面、板书、PPT、图表、软件界面的判断，优先引用模型精选关键帧路径或对应课时。"""
 
     digest = call_llm([{"role": "user", "content": prompt}])
 
@@ -432,14 +521,17 @@ def main():
 
     transcripts = load_transcripts(course_dir)
     analyses = load_analyses(course_dir)
+    text_synthesis = load_text_synthesis(course_dir)
 
-    if not transcripts:
-        print("❌ 无转录数据")
+    if not transcripts and not text_synthesis:
+        print("❌ 无转录数据，也无纯文字蒸馏结果")
         sys.exit(1)
 
     summary_path = os.path.join(course_dir, "lesson_summaries.json")
 
-    if args.skip_summaries and os.path.exists(summary_path):
+    if not transcripts:
+        summaries = []
+    elif args.skip_summaries and os.path.exists(summary_path):
         print(f"📄 加载已有摘要: {summary_path}")
         with open(summary_path, encoding="utf-8") as f:
             summaries = json.load(f)
@@ -449,7 +541,7 @@ def main():
             json.dump(summaries, f, ensure_ascii=False, indent=2)
         print(f"  💾 {summary_path}")
 
-    digest = build_course_digest(transcripts, summaries, args.course_name)
+    digest = build_course_digest(transcripts, summaries, args.course_name, course_dir)
 
     # Markdown
     md_path = os.path.join(course_dir, f"course_distillation_{timestamp}.md")

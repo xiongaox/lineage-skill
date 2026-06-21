@@ -32,6 +32,19 @@ def load_json(path: Path | None) -> object | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_jsonl(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        if isinstance(item, dict):
+            rows.append(item)
+    return rows
+
+
 def newest(source_dir: Path, pattern: str) -> Path | None:
     matches = sorted(source_dir.glob(pattern), key=lambda path: path.stat().st_mtime, reverse=True)
     return matches[0] if matches else None
@@ -61,6 +74,50 @@ def bullets(text: str, limit: int = 80) -> list[str]:
         if len(rows) >= limit:
             break
     return rows
+
+
+def add_unique(rows: list[str], value: str, limit: int = 120) -> None:
+    value = value.strip()
+    if not value or value in rows or len(rows) >= limit:
+        return
+    rows.append(value)
+
+
+def card_value(card: dict) -> str:
+    title = str(card.get("title") or "").strip()
+    body = str(card.get("quote") or card.get("summary") or "").strip()
+    source = str(card.get("source_ref") or card.get("source_path") or "").strip()
+    chunk = card.get("chunk_index")
+    if title and body and title not in body:
+        value = f"{title}：{body}"
+    else:
+        value = body or title
+    if source:
+        suffix = f"{source}#{chunk}" if chunk is not None else source
+        value = f"{value}（{suffix}）"
+    return value
+
+
+def load_text_cards(source_dir: Path) -> list[dict]:
+    return load_jsonl(source_dir / "text_distillation" / "evidence_cards.jsonl")
+
+
+def merge_text_cards(package: dict, cards: list[dict]) -> None:
+    for card in cards:
+        card_type = card.get("card_type")
+        value = card_value(card)
+        if card_type == "concept":
+            add_unique(package["concepts"], value)
+        elif card_type == "method":
+            add_unique(package["methods"], value)
+        elif card_type == "case":
+            package["cases"].append(card)
+        elif card_type == "quote":
+            add_unique(package["quotes"], value)
+        elif card_type == "boundary":
+            add_unique(package["boundaries"], value)
+        elif card_type in {"task", "open_question"}:
+            package["learning_checks"].append(card)
 
 
 def normalize_lessons(data: object | None) -> list[dict]:
@@ -98,12 +155,33 @@ def build_evidence(source_dir: Path) -> list[dict]:
     for path in sorted(source_dir.glob("analysis/screenshots/**/*")):
         if path.is_file():
             rows.append({"type": "screenshot", "path": str(path.relative_to(source_dir)), "granularity": "file"})
+    for path in sorted(source_dir.glob("keyframe_selection/*_model_keyframes_manifest.json")):
+        rows.append({"type": "model_keyframe_manifest", "path": str(path.relative_to(source_dir)), "granularity": "media"})
+    for path in sorted(source_dir.glob("keyframe_selection/model_keyframe_summary.md")):
+        rows.append({"type": "model_keyframe_summary", "path": str(path.relative_to(source_dir)), "granularity": "course"})
+    for path in sorted(source_dir.glob("keyframes_model_selected/**/*")):
+        if path.is_file():
+            rows.append({"type": "model_selected_keyframe", "path": str(path.relative_to(source_dir)), "granularity": "frame"})
     for path in sorted(source_dir.glob("course_distillation_*.*")):
         rows.append({"type": "distillation", "path": str(path.relative_to(source_dir)), "granularity": "file"})
     for path in sorted(source_dir.glob("documents/**/*.md")):
         rows.append({"type": "document_ocr", "path": str(path.relative_to(source_dir)), "granularity": "file"})
     for path in sorted(source_dir.glob("documents/**/*.json")):
         rows.append({"type": "document_manifest", "path": str(path.relative_to(source_dir)), "granularity": "file"})
+    for path in sorted(source_dir.glob("documents/**/*.html")) + sorted(source_dir.glob("documents/**/*.htm")):
+        rows.append({"type": "document_raw_html", "path": str(path.relative_to(source_dir)), "granularity": "file"})
+    for path in sorted(source_dir.glob("documents/**/*.txt")):
+        rows.append({"type": "document_raw_text", "path": str(path.relative_to(source_dir)), "granularity": "file"})
+    for path in sorted(source_dir.glob("text_sources/source_manifest.json")):
+        rows.append({"type": "text_source_manifest", "path": str(path.relative_to(source_dir)), "granularity": "course"})
+    for path in sorted(source_dir.glob("text_sources/chunks.jsonl")):
+        rows.append({"type": "text_source_chunks", "path": str(path.relative_to(source_dir)), "granularity": "chunk"})
+    for path in sorted(source_dir.glob("text_distillation/evidence_cards.jsonl")):
+        rows.append({"type": "text_evidence_card", "path": str(path.relative_to(source_dir)), "granularity": "card"})
+    for path in sorted(source_dir.glob("text_distillation/text_course_synthesis.md")):
+        rows.append({"type": "text_course_synthesis", "path": str(path.relative_to(source_dir)), "granularity": "course"})
+    for path in sorted(source_dir.glob("text_distillation/text_distillation_quality.json")):
+        rows.append({"type": "text_distillation_quality", "path": str(path.relative_to(source_dir)), "granularity": "course"})
     return rows
 
 
@@ -155,6 +233,7 @@ def build_package(course_name: str, source_dir: Path) -> dict:
         "study_paths": bullets(sections["study_paths"]),
         "boundaries": bullets(sections["boundaries"]),
     }
+    merge_text_cards(package, load_text_cards(source_dir))
     package["quality"] = package_quality(package)
     return package
 

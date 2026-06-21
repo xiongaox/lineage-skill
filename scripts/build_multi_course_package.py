@@ -158,6 +158,33 @@ def write_summary(package: dict[str, Any], output_dir: Path) -> None:
     )
 
 
+def write_evidence_map(package: dict[str, Any], output_dir: Path) -> None:
+    evidence = package.get("evidence") if isinstance(package.get("evidence"), list) else []
+    by_course: dict[str, int] = {}
+    by_type: dict[str, int] = {}
+    for row in evidence:
+        if not isinstance(row, dict):
+            continue
+        by_course[row.get("source_course_id", "unknown")] = by_course.get(row.get("source_course_id", "unknown"), 0) + 1
+        by_type[row.get("type", "unknown")] = by_type.get(row.get("type", "unknown"), 0) + 1
+    payload = {
+        "generated_at": package["manifest"]["generated_at"],
+        "source_dir": str(output_dir),
+        "source_courses": package["manifest"]["source_courses"],
+        "counts": {
+            "total": len(evidence),
+            "by_course": dict(sorted(by_course.items())),
+            "by_type": dict(sorted(by_type.items())),
+        },
+        "evidence": evidence,
+        "notes": [
+            "Paths with course-001/course-002 prefixes refer to merged CoursePackage paths.",
+            "Packaged Skill references also copy each source workspace under references/source_courses/<source-dir-name>/.",
+        ],
+    }
+    output_dir.joinpath("evidence_map.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Merge multiple CoursePackage files into one combined workspace.")
     parser.add_argument("--course", action="append", required=True, help="Course workspace or course_package.json path. Repeatable.")
@@ -173,6 +200,7 @@ def main() -> None:
     package = merge_packages(items, args.combined_name)
     output_dir.joinpath("course_package.json").write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     write_summary(package, output_dir)
+    write_evidence_map(package, output_dir)
     print(f"wrote {output_dir / 'course_package.json'}")
     print(f"source courses: {len(items)}")
 
