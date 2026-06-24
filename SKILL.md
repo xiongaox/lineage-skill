@@ -30,7 +30,7 @@ Use this skill when the user asks to:
 
 ## Capabilities
 
-This Skill owns the course-distillation pipeline. Do not describe transcription, visual analysis, screenshot extraction, OCR collection, distillation, packaging, or generated-Skill creation as work the user must perform manually when suitable source files and configured providers are available.
+This Skill owns the course/book-distillation pipeline. Do not describe transcription, visual analysis, screenshot extraction, OCR collection, distillation, packaging, or generated-Skill creation as work the user must perform manually when suitable source files and configured providers are available.
 
 Supported capabilities:
 
@@ -63,7 +63,7 @@ Capability is separate from configuration. If a provider is missing, report the 
   - Prefer strong video/vision models for long videos, slides, boards, screenshots, diagrams, and software screens.
   - Gemini-class video models are appropriate when exposed through a compatible endpoint or adapter.
 - Text distillation requires `LINEAGE_TEXT_API_KEY`, `LINEAGE_TEXT_BASE_URL`, and `LINEAGE_TEXT_MODEL` when `DISTILL_USE_LLM=1`.
-  - Prefer long-context models with stable structured output and good support for the course language.
+  - Prefer long-context models with stable structured output and good support for the source language.
 - PDF/OCR submission requires `MINERU_API_TOKEN` unless reusing existing MinerU output with `--skip-submit`.
 - Local media handling requires installed `ffmpeg` and `ffprobe`.
 
@@ -86,7 +86,7 @@ Standalone audio files are transcribed by the capture stage, but they do not pro
 2. Choose role:
    - Default: `mentor`.
    - Use `expert` when the user specifically wants narrow course Q&A, concept explanation, or lesson lookup.
-   - Use `consultant` when the user wants private consulting, diagnosis, or advice based on the course methods.
+   - Use `consultant` when the user wants private consulting, diagnosis, or advice based on the course/book methods.
    - Use `practitioner` when the user wants checklists, playbooks, templates, workflows, or concrete work outputs.
    - Use `custom` when the user describes a specific role or workflow that does not fit the defaults.
    - Treat single-course, multi-course, and fused/domain packages as scope metadata, not role names.
@@ -227,7 +227,9 @@ After generation, verify:
 ├── SKILL.md
 ├── agents/
 ├── references/
+│   └── okf/
 ├── scripts/search_course_notes.py
+├── scripts/fetch_course_evidence.py
 └── lineage_manifest.json
 ```
 
