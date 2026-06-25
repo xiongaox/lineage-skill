@@ -32,8 +32,7 @@ course/book/long-form method system generator:
   `templates`, `transfer_rules`, and `failure_modes`.
 - **OKF-compatible knowledge bundle**: generated Skills now include
   `references/okf/`, a Markdown + frontmatter bundle for progressive reading,
-  human review, cross-tool exchange, and concept graph navigation, added after
-  [rfeng1016](https://github.com/rfeng1016)'s reminder and recommendation.
+  human review, cross-tool exchange, and concept graph navigation.
 - **Stronger provenance lookup**: `scripts/fetch_course_evidence.py` can fetch
   source chunks and related evidence cards by `chunk_id` or `card_id`.
 - **Multi-course capability preservation**: merged packages keep capability
