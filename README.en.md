@@ -32,7 +32,8 @@ course/book/long-form method system generator:
   `templates`, `transfer_rules`, and `failure_modes`.
 - **OKF-compatible knowledge bundle**: generated Skills now include
   `references/okf/`, a Markdown + frontmatter bundle for progressive reading,
-  human review, cross-tool exchange, and concept graph navigation.
+  human review, cross-tool exchange, and concept graph navigation, added after
+  [rfeng1016](https://github.com/rfeng1016)'s reminder and recommendation.
 - **Stronger provenance lookup**: `scripts/fetch_course_evidence.py` can fetch
   source chunks and related evidence cards by `chunk_id` or `card_id`.
 - **Multi-course capability preservation**: merged packages keep capability
@@ -317,6 +318,7 @@ projects in this repository's Issues.
 ## Acknowledgements
 
 - [Datawhale](https://github.com/datawhalechina) — thanks to the Datawhale open-source community for its long-running work in AI education, open courses, and learner-centered community building.
+- [rfeng1016](https://github.com/rfeng1016) — thanks for the reminder and recommendation around OKF, which led to adding the OKF-compatible knowledge bundle to this project.
 - [LINUX DO — Chinese Developer Community](https://linux.do/) — thanks to the LINUX DO community for discussion, feedback, and distribution support. The community is also a good place to discuss course distillation and Agent Skill practice.
 
 ## License

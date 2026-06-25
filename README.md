@@ -24,7 +24,7 @@
 
 - **支持书籍和长文档**：书籍、章节 Markdown、OCR 文本和课程材料都可以走同一套蒸馏流程。
 - **新增能力资产抽取**：除了概念、方法、案例、引用，现在会抽取 `diagnostics`、`workflows`、`rubrics`、`templates`、`transfer_rules`、`failure_modes`。
-- **新增 OKF 兼容知识包**：生成 Skill 时会在 `references/okf/` 输出 Markdown + frontmatter 的渐进式知识目录，便于人读、Agent 逐层读取、跨工具交换和图谱化。
+- **新增 OKF 兼容知识包**：在 [rfeng1016](https://github.com/rfeng1016) 的提醒和推荐下，生成 Skill 时会在 `references/okf/` 输出 Markdown + frontmatter 的渐进式知识目录，便于人读、Agent 逐层读取、跨工具交换和图谱化。
 - **增强溯源链路**：新增 `scripts/fetch_course_evidence.py`，可以通过 `chunk_id` 或 `card_id` 回到原始 source chunk 和相关证据卡。
 - **多课程合并保留能力字段**：跨课程包会继续保留来源边界，避免把不同课程/书籍的判断压平成一个无来源结论。
 
@@ -335,6 +335,7 @@ MINERU_API_TOKEN=
 
   <img src="./docs/img/lsgogroup-wechat-public-code.jpg" alt="LSGOGROUP 公众号二维码" width="160">
 
+- [rfeng1016](https://github.com/rfeng1016) — 感谢他对 OKF 的提醒和推荐，促成了本项目加入 OKF 兼容知识包。
 - [LINUX DO — 中文开发者社区](https://linux.do/) — 感谢 LINUX DO 社区的讨论、反馈和传播支持，也欢迎大家在社区里交流课程/书籍蒸馏与 Agent Skill 实践。
 
 ## License
