@@ -363,6 +363,17 @@ def copy_optional_reference_dirs(source_dir: Path, references_dir: Path) -> dict
     return statuses
 
 
+def copy_optional_reference_files(source_dir: Path, references_dir: Path) -> dict[str, str]:
+    statuses = {}
+    for filename in ["distillation_audit.json", "distillation_audit.md"]:
+        src = source_dir / filename
+        if not src.exists():
+            continue
+        shutil.copy2(src, references_dir / filename)
+        statuses[filename] = "copied"
+    return statuses
+
+
 def copy_source_courses_from_package(source_dir: Path, references_dir: Path) -> dict[str, str]:
     package = load_json_if_exists(source_dir / "course_package.json")
     manifest = package.get("manifest", {}) if isinstance(package, dict) and isinstance(package.get("manifest"), dict) else {}
@@ -570,17 +581,19 @@ Active role(s): {mode_labels}.
 5. `references/evidence_map.json` for source files, screenshots, transcripts, and confidence notes.
 6. `references/quote_index.md` for memorable course statements.
 7. `references/study_paths.md` for review plans and learning routes.
-8. `references/course_package.json` for normalized package objects when structured lookup is needed.
-9. `references/full_transcript.md` for original wording when detailed citation is required.
-10. `references/keyframe_selection/model_keyframe_summary.md` for model-selected visual evidence when present.
-11. `references/keyframe_selection/` and `references/keyframes_model_selected/` for image manifests and selected frame files when present.
-12. `references/text_distillation/evidence_cards.jsonl` and `references/text_sources/chunks.jsonl` for pure-text evidence cards and source chunks when present.
-13. `references/transcripts/`, `references/analysis/`, and `references/documents/` for packaged source evidence directories when present.
+8. `references/distillation_audit.md` and `references/distillation_audit.json` for capture quality, cross-source validation, missing evidence, and human-review notes when present.
+9. `references/course_package.json` for normalized package objects when structured lookup is needed.
+10. `references/full_transcript.md` for original wording when detailed citation is required.
+11. `references/keyframe_selection/model_keyframe_summary.md` for model-selected visual evidence when present.
+12. `references/keyframe_selection/` and `references/keyframes_model_selected/` for image manifests and selected frame files when present.
+13. `references/text_distillation/evidence_cards.jsonl` and `references/text_sources/chunks.jsonl` for pure-text evidence cards and source chunks when present.
+14. `references/transcripts/`, `references/analysis/`, and `references/documents/` for packaged source evidence directories when present.
 
 ## Capability Reading Strategy
 
 - For progressive reading, start with `references/okf/index.md`, open only the relevant OKF section index, then read individual concept files.
 - For factual questions, start with `references/course_package.json`, then use `references/evidence_map.json` and `scripts/search_course_notes.py` to locate supporting lessons, cards, transcripts, documents, or chunks.
+- Check `references/distillation_audit.md` or `references/distillation_audit.json` before treating a lesson as complete; report missing transcripts, visual analysis, documents, terminology risks, or manual-review warnings when they affect the answer.
 - For application, consulting, or output-producing requests, prioritize `methods`, `diagnostics`, `workflows`, `rubrics`, `templates`, `transfer_rules`, and `failure_modes` from `references/course_package.json`.
 - Use `references/text_distillation/evidence_cards.jsonl` to separate direct source cards from your own synthesis.
 - Use OKF `# Citations` links for readable provenance, and use JSON/script lookup when exact source spans are required.
@@ -868,6 +881,7 @@ def main() -> None:
     )
     statuses["lesson_index.json"] = build_lesson_index(source_dir, references_dir / "lesson_index.json")
     statuses["evidence_map.json"] = build_evidence_map(source_dir, references_dir / "evidence_map.json")
+    statuses.update(copy_optional_reference_files(source_dir, references_dir))
     statuses.update(copy_optional_reference_dirs(source_dir, references_dir))
     statuses.update(copy_source_courses_from_package(source_dir, references_dir))
     statuses.update(write_mode_references(references_dir, modes))

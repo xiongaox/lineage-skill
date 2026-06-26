@@ -132,3 +132,38 @@ def test_build_package_merges_capability_evidence_cards(tmp_path: Path) -> None:
     assert any("复盘模板" in item for item in package["templates"])
     assert any("迁移规则" in item for item in package["transfer_rules"])
     assert any("常见误用" in item for item in package["failure_modes"])
+
+
+def test_build_package_includes_distillation_audit_summary(tmp_path: Path) -> None:
+    course_dir = tmp_path / "course"
+    course_dir.mkdir()
+    audit = {
+        "schema_version": "0.1",
+        "course_name": "Demo",
+        "coverage_summary": {
+            "expected_lessons": 2,
+            "available_transcripts": 1,
+            "available_visual_analyses": 1,
+            "unmatched_documents": 1,
+        },
+        "cross_validation_summary": {
+            "multi_source_lessons": 1,
+            "source_conflicts": 1,
+            "manual_review_required": 2,
+            "terminology_review_lessons": 1,
+        },
+        "manual_review": ["人工校对建议：请复核术语。"],
+        "lessons": [{"lesson_id": "lesson1"}, {"lesson_id": "lesson2"}],
+    }
+    (course_dir / "distillation_audit.json").write_text(json.dumps(audit, ensure_ascii=False), encoding="utf-8")
+    (course_dir / "distillation_audit.md").write_text("# audit\n", encoding="utf-8")
+
+    package = build_package("Demo", course_dir)
+
+    summary = package["quality"]["distillation_audit"]
+    assert summary["json_path"] == "distillation_audit.json"
+    assert summary["markdown_path"] == "distillation_audit.md"
+    assert summary["lesson_count"] == 2
+    assert summary["manual_review_required"] == 2
+    assert summary["coverage_summary"]["available_transcripts"] == 1
+    assert summary["cross_validation_summary"]["source_conflicts"] == 1

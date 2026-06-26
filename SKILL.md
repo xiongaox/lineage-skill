@@ -45,6 +45,7 @@ Supported capabilities:
 - Distill transcripts, visual analyses, screenshots, OCR documents, and user notes into structured course notes.
 - Distill pure text materials into source-grounded evidence cards before synthesis, including Markdown notes, TXT exports, handouts, and existing OCR Markdown.
 - Extract capability cards from books and courses: diagnostics, workflows, rubrics, templates, transfer rules, and failure modes in addition to concepts, methods, cases, quotes, tasks, and boundaries.
+- Build final distillation audit reports that record transcript quality, multimodal/video analysis coverage, courseware/OCR/text extraction status, cross-source validation, missing evidence, terminology risks, and human proofreading recommendations.
 - Build `course_package.json`, `evidence_map.json`, and `lesson_index.json`.
 - Build an OKF-style Markdown knowledge bundle under `references/okf/` for progressive reading, human review, cross-agent exchange, and concept graph navigation.
 - Merge multiple `course_package.json` files into one combined multi-course workspace.
@@ -114,6 +115,7 @@ Default paths:
   - `documents/` for OCR, handouts, slides, and document manifests.
   - `text_sources/` for stable source manifests and text chunks.
   - `text_distillation/` for evidence cards, text-source synthesis, source summaries, and quality audits.
+  - `distillation_audit.json` and `distillation_audit.md` for final per-lesson capture quality, cross-source validation, traceability, and manual-review guidance.
   - `index/` for coverage audits, evidence path guides, and searchable inventories when available.
 - If the user does not provide `--skill-name`, use the builder default:
   - `<course-slug>-mentor-lineage` for `mentor`.
@@ -241,6 +243,7 @@ Check:
 - `references/okf/index.md` exists.
 - `references/okf/log.md` exists.
 - `references/evidence_map.json` exists.
+- `references/distillation_audit.json` and `references/distillation_audit.md` exist after a full pipeline run, unless the audit stage was explicitly skipped.
 - If videos were present, `references/keyframe_selection/model_keyframe_summary.md` exists or the pipeline explicitly recorded that no video files were found.
 - If videos were present, selected images live under `references/keyframes_model_selected/`; raw candidate frames should not be required in the generated Skill.
 - `references/lesson_index.json` exists.
@@ -248,8 +251,9 @@ Check:
 - `scripts/search_course_notes.py` is executable.
 - `scripts/fetch_course_evidence.py` is executable.
 - `references/course_package.json` includes capability fields when available: `diagnostics`, `workflows`, `rubrics`, `templates`, `transfer_rules`, and `failure_modes`.
+- `references/course_package.json` includes `quality.distillation_audit` when `distillation_audit.json` was present before package building.
 - `<course-dir>/lineage_progress.json` exists after a full pipeline run.
-- `lineage_progress.json` includes the `keyframes` stage and artifact counts for candidates, selected keyframes, manifests, and keyframe summaries.
+- `lineage_progress.json` includes the `keyframes` and `audit` stages, artifact counts for candidates, selected keyframes, manifests, and keyframe summaries, plus audit artifact flags.
 - `<base-dir>/course_catalog.json` is updated after a full pipeline run.
 
 If validation fails, fix the missing artifact and rerun the smallest necessary command.

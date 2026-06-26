@@ -118,3 +118,65 @@ def test_generated_skill_includes_okf_bundle_for_progressive_reading(tmp_path: P
     assert okf_index.exists()
     assert "references/okf/index.md" in skill_md
     assert "OKF" in okf_index.read_text(encoding="utf-8")
+
+
+def test_generated_skill_includes_distillation_audit_references(tmp_path: Path) -> None:
+    course_dir = tmp_path / "course"
+    course_dir.mkdir()
+    package = {
+        "schema_version": "0.2",
+        "manifest": {"course_name": "Demo Course", "source_dir": str(course_dir)},
+        "lessons": [],
+        "concepts": [],
+        "topics": [],
+        "cases": [],
+        "methods": [],
+        "diagnostics": [],
+        "workflows": [],
+        "rubrics": [],
+        "templates": [],
+        "transfer_rules": [],
+        "failure_modes": [],
+        "learning_checks": [],
+        "quotes": [],
+        "evidence": [],
+        "study_paths": [],
+        "boundaries": [],
+    }
+    (course_dir / "course_package.json").write_text(json.dumps(package, ensure_ascii=False), encoding="utf-8")
+    (course_dir / "distillation_audit.json").write_text(
+        json.dumps({"schema_version": "0.1", "lessons": [], "manual_review": []}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (course_dir / "distillation_audit.md").write_text("# Audit\n\n人工校对建议\n", encoding="utf-8")
+
+    output_dir = tmp_path / "dist"
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "build_course_skill.py"),
+            "--course-name",
+            "Demo Course",
+            "--skill-name",
+            "demo-course-lineage",
+            "--mode",
+            "expert",
+            "--source-dir",
+            str(course_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+        check=True,
+        cwd=ROOT,
+    )
+
+    skill_dir = output_dir / "demo-course-lineage"
+    skill_md = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+    manifest = json.loads((skill_dir / "lineage_manifest.json").read_text(encoding="utf-8"))
+
+    assert (skill_dir / "references" / "distillation_audit.json").exists()
+    assert (skill_dir / "references" / "distillation_audit.md").exists()
+    assert "references/distillation_audit.md" in skill_md
+    assert "references/distillation_audit.json" in skill_md
+    assert manifest["reference_status"]["distillation_audit.json"] == "copied"
+    assert manifest["reference_status"]["distillation_audit.md"] == "copied"

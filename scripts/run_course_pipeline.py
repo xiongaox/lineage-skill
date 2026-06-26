@@ -202,6 +202,7 @@ def main() -> None:
     parser.add_argument("--skip-distill", action="store_true")
     parser.add_argument("--skip-summaries", action="store_true", help="Pass through to distill_course.py to reuse lesson_summaries.json.")
     parser.add_argument("--skip-package", action="store_true")
+    parser.add_argument("--skip-audit", action="store_true")
     parser.add_argument("--skip-build-skill", action="store_true")
     parser.add_argument("--limit", type=int, default=0, help="Limit media count for transcribe/analyze smoke runs.")
     args = parser.parse_args()
@@ -377,6 +378,22 @@ def main() -> None:
         ],
         args.skip_distill,
         stage="distill",
+        args=args,
+        base_dir=base_dir,
+        output_dir=output_dir,
+        course_dir=course_dir,
+    )
+    run(
+        [
+            py,
+            str(ROOT / "scripts" / "build_distillation_audit.py"),
+            "--course-name",
+            args.course_name,
+            "--source-dir",
+            str(course_dir),
+        ],
+        args.skip_audit,
+        stage="audit",
         args=args,
         base_dir=base_dir,
         output_dir=output_dir,

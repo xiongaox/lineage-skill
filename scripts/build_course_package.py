@@ -224,6 +224,23 @@ def package_quality(package: dict) -> dict:
     }
 
 
+def distillation_audit_summary(source_dir: Path) -> dict | None:
+    path = source_dir / "distillation_audit.json"
+    if not path.exists():
+        return None
+    data = load_json(path)
+    if not isinstance(data, dict):
+        return None
+    return {
+        "json_path": "distillation_audit.json",
+        "markdown_path": "distillation_audit.md" if (source_dir / "distillation_audit.md").exists() else "",
+        "lesson_count": len(data.get("lessons") or []),
+        "manual_review_required": (data.get("cross_validation_summary") or {}).get("manual_review_required", 0),
+        "coverage_summary": data.get("coverage_summary") or {},
+        "cross_validation_summary": data.get("cross_validation_summary") or {},
+    }
+
+
 def build_package(course_name: str, source_dir: Path) -> dict:
     distillation_md = newest(source_dir, "course_distillation_*.md")
     distillation_json = newest(source_dir, "course_distillation_*.json")
@@ -261,6 +278,9 @@ def build_package(course_name: str, source_dir: Path) -> dict:
     }
     merge_text_cards(package, load_text_cards(source_dir))
     package["quality"] = package_quality(package)
+    audit_summary = distillation_audit_summary(source_dir)
+    if audit_summary:
+        package["quality"]["distillation_audit"] = audit_summary
     return package
 
 
