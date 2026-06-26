@@ -17,6 +17,7 @@ BOARD_TERMS = ("板书", "白板", "blackboard", "whiteboard")
 DEMO_TERMS = ("演示", "demo", "操作", "software", "screen", "screens", "软件")
 DIAGRAM_TERMS = ("图表", "diagram", "chart", "流程图", "表格", "table")
 TERM_REVIEW_TERMS = ("术语", "专名", "错字", "校对", "同音", "ocr", "asr", "Lineage", "Skill")
+AUDIT_MODES = {"auto", "strict", "off"}
 
 
 def read_text(path: Path) -> str:
@@ -155,6 +156,26 @@ def matching_documents(lesson_id: str, documents: dict[str, list[dict[str, Any]]
     return matches
 
 
+def cross_validation_policy(audit_mode: str, source_count: int) -> dict[str, Any]:
+    if audit_mode == "off":
+        return {
+            "mode": audit_mode,
+            "required": False,
+            "reason": "cross validation disabled by audit mode",
+        }
+    if audit_mode == "strict":
+        return {
+            "mode": audit_mode,
+            "required": True,
+            "reason": "strict audit mode requires review of missing or conflicting sources",
+        }
+    return {
+        "mode": audit_mode,
+        "required": source_count >= 2,
+        "reason": "auto mode validates across sources only when comparable sources are available",
+    }
+
+
 def related_text_trace(source_dir: Path, lesson_id: str) -> dict[str, list[str]]:
     chunks_path = source_dir / "text_sources" / "chunks.jsonl"
     cards_path = source_dir / "text_distillation" / "evidence_cards.jsonl"
@@ -210,6 +231,7 @@ def build_lesson(
     manifest: dict[str, Any] | None,
     documents: list[dict[str, Any]],
     summary: dict[str, Any] | None,
+    audit_mode: str,
 ) -> dict[str, Any]:
     transcript_data = transcript.get("data", {}) if transcript else {}
     transcript_text = str(transcript_data.get("full_text") or transcript_data.get("text") or "")
@@ -223,21 +245,24 @@ def build_lesson(
         data = manifest.get("data", {})
         keyframe_count = int(data.get("selected_count") or len(data.get("selected") or data.get("keyframes") or []))
     source_count = sum([bool(transcript), bool(analysis), bool(documents)])
+    policy = cross_validation_policy(audit_mode, source_count)
 
     flags: list[str] = []
     if source_count >= 2:
         flags.append("supported_by_multiple_sources")
-    if not transcript:
+    elif source_count == 1:
+        flags.append("single_source_available")
+    if policy["required"] and not transcript:
         flags.append("missing_transcript")
-    if not analysis:
+    if policy["required"] and not analysis:
         flags.append("missing_visual_analysis")
-    if analysis and not transcript:
+    if policy["required"] and analysis and not transcript:
         flags.append("visual_only_claims")
-    if transcript and not analysis:
+    if policy["required"] and transcript and not analysis:
         flags.append("spoken_but_not_in_slides")
-    if analysis and contains_any(analysis_text, SLIDE_TERMS + DIAGRAM_TERMS + DEMO_TERMS) and not transcript_text:
+    if policy["required"] and analysis and contains_any(analysis_text, SLIDE_TERMS + DIAGRAM_TERMS + DEMO_TERMS) and not transcript_text:
         flags.append("slides_not_mentioned_in_transcript")
-    if transcript and analysis and contains_any(analysis_text, SLIDE_TERMS + DIAGRAM_TERMS + DEMO_TERMS):
+    if policy["required"] and transcript and analysis and contains_any(analysis_text, SLIDE_TERMS + DIAGRAM_TERMS + DEMO_TERMS):
         if not contains_any(transcript_text, ("图", "表", "课件", "ppt", "演示", "软件", "流程")):
             flags.append("transcript_visual_mismatch")
     if transcript_len < 20:
@@ -302,6 +327,7 @@ def build_lesson(
             "empty_or_short_text": bool(documents and document_text_len < 20),
         },
         "cross_validation": {
+            "policy": policy,
             "source_count": source_count,
             "flags": flags,
             "review_recommendations": review_notes,
@@ -310,8 +336,10 @@ def build_lesson(
     }
 
 
-def build_audit(course_name: str, source_dir: Path) -> dict[str, Any]:
+def build_audit(course_name: str, source_dir: Path, audit_mode: str = "auto") -> dict[str, Any]:
     source_dir = source_dir.expanduser().resolve()
+    if audit_mode not in AUDIT_MODES:
+        raise ValueError(f"audit_mode must be one of {sorted(AUDIT_MODES)}")
     transcripts = collect_transcripts(source_dir)
     analyses = collect_analyses(source_dir)
     manifests = collect_manifests(source_dir)
@@ -334,6 +362,7 @@ def build_audit(course_name: str, source_dir: Path) -> dict[str, Any]:
                 manifest=manifests.get(lesson_id),
                 documents=docs,
                 summary=summaries.get(lesson_id),
+                audit_mode=audit_mode,
             )
         )
 
@@ -351,6 +380,7 @@ def build_audit(course_name: str, source_dir: Path) -> dict[str, Any]:
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "course_name": course_name,
         "source_dir": str(source_dir),
+        "audit_mode": audit_mode,
         "source_inventory": source_inventory(source_dir),
         "coverage_summary": {
             "expected_lessons": len(lesson_ids),
@@ -432,8 +462,8 @@ def render_markdown(audit: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def write_audit(course_name: str, source_dir: Path) -> dict[str, str]:
-    audit = build_audit(course_name, source_dir)
+def write_audit(course_name: str, source_dir: Path, audit_mode: str = "auto") -> dict[str, str]:
+    audit = build_audit(course_name, source_dir, audit_mode=audit_mode)
     json_path = source_dir / "distillation_audit.json"
     markdown_path = source_dir / "distillation_audit.md"
     json_path.write_text(json.dumps(audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -445,12 +475,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build final distillation quality and cross-validation audit files.")
     parser.add_argument("--course-name", required=True)
     parser.add_argument("--source-dir", required=True)
+    parser.add_argument(
+        "--audit-mode",
+        choices=sorted(AUDIT_MODES),
+        default="auto",
+        help="Cross-validation policy: auto validates only when comparable sources exist, strict requires review, off records inventory only.",
+    )
     args = parser.parse_args()
 
     source_dir = Path(args.source_dir).expanduser().resolve()
     if not source_dir.is_dir():
         raise SystemExit(f"source dir does not exist: {source_dir}")
-    result = write_audit(args.course_name, source_dir)
+    result = write_audit(args.course_name, source_dir, audit_mode=args.audit_mode)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

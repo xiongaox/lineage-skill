@@ -581,7 +581,7 @@ Active role(s): {mode_labels}.
 5. `references/evidence_map.json` for source files, screenshots, transcripts, and confidence notes.
 6. `references/quote_index.md` for memorable course statements.
 7. `references/study_paths.md` for review plans and learning routes.
-8. `references/distillation_audit.md` and `references/distillation_audit.json` for capture quality, cross-source validation, missing evidence, and human-review notes when present.
+8. `references/distillation_audit.md` and `references/distillation_audit.json` for capture quality, audit policy, cross-source validation when applicable, missing evidence under the selected audit mode, and human-review notes when present.
 9. `references/course_package.json` for normalized package objects when structured lookup is needed.
 10. `references/full_transcript.md` for original wording when detailed citation is required.
 11. `references/keyframe_selection/model_keyframe_summary.md` for model-selected visual evidence when present.
@@ -593,7 +593,7 @@ Active role(s): {mode_labels}.
 
 - For progressive reading, start with `references/okf/index.md`, open only the relevant OKF section index, then read individual concept files.
 - For factual questions, start with `references/course_package.json`, then use `references/evidence_map.json` and `scripts/search_course_notes.py` to locate supporting lessons, cards, transcripts, documents, or chunks.
-- Check `references/distillation_audit.md` or `references/distillation_audit.json` before treating a lesson as complete; report missing transcripts, visual analysis, documents, terminology risks, or manual-review warnings when they affect the answer.
+- Check `references/distillation_audit.md` or `references/distillation_audit.json` before treating a lesson as complete. Respect its `audit_mode` and per-lesson `cross_validation.policy`: cross-source validation is required only when comparable sources are available in auto mode, or when strict audit mode says it is required.
 - For application, consulting, or output-producing requests, prioritize `methods`, `diagnostics`, `workflows`, `rubrics`, `templates`, `transfer_rules`, and `failure_modes` from `references/course_package.json`.
 - Use `references/text_distillation/evidence_cards.jsonl` to separate direct source cards from your own synthesis.
 - Use OKF `# Citations` links for readable provenance, and use JSON/script lookup when exact source spans are required.

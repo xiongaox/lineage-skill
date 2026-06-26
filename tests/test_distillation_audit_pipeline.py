@@ -29,5 +29,7 @@ def test_audit_stage_runs_after_distill_before_package() -> None:
 
     pipeline = (ROOT / "scripts" / "run_course_pipeline.py").read_text(encoding="utf-8")
     assert "--skip-audit" in pipeline
+    assert "--audit-mode" in pipeline
+    assert "resolve_audit_mode" in pipeline
     assert "build_distillation_audit.py" in pipeline
     assert 'stage="audit"' in pipeline

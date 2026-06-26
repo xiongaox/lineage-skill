@@ -45,7 +45,7 @@ Supported capabilities:
 - Distill transcripts, visual analyses, screenshots, OCR documents, and user notes into structured course notes.
 - Distill pure text materials into source-grounded evidence cards before synthesis, including Markdown notes, TXT exports, handouts, and existing OCR Markdown.
 - Extract capability cards from books and courses: diagnostics, workflows, rubrics, templates, transfer rules, and failure modes in addition to concepts, methods, cases, quotes, tasks, and boundaries.
-- Build final distillation audit reports that record transcript quality, multimodal/video analysis coverage, courseware/OCR/text extraction status, cross-source validation, missing evidence, terminology risks, and human proofreading recommendations.
+- Build final distillation audit reports that record transcript quality, multimodal/video analysis coverage, courseware/OCR/text extraction status, audit policy, cross-source validation when applicable, missing evidence under the selected mode, terminology risks, and human proofreading recommendations.
 - Build `course_package.json`, `evidence_map.json`, and `lesson_index.json`.
 - Build an OKF-style Markdown knowledge bundle under `references/okf/` for progressive reading, human review, cross-agent exchange, and concept graph navigation.
 - Merge multiple `course_package.json` files into one combined multi-course workspace.
@@ -115,7 +115,7 @@ Default paths:
   - `documents/` for OCR, handouts, slides, and document manifests.
   - `text_sources/` for stable source manifests and text chunks.
   - `text_distillation/` for evidence cards, text-source synthesis, source summaries, and quality audits.
-  - `distillation_audit.json` and `distillation_audit.md` for final per-lesson capture quality, cross-source validation, traceability, and manual-review guidance.
+  - `distillation_audit.json` and `distillation_audit.md` for final per-lesson capture quality, audit policy, cross-source validation when applicable, traceability, and manual-review guidance.
   - `index/` for coverage audits, evidence path guides, and searchable inventories when available.
 - If the user does not provide `--skill-name`, use the builder default:
   - `<course-slug>-mentor-lineage` for `mentor`.

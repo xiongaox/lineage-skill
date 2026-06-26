@@ -130,9 +130,48 @@ def test_build_audit_flags_missing_visual_short_transcript_and_unmatched_documen
     assert lesson["lesson_id"] == "lesson2"
     assert lesson["transcript_status"]["short_text"] is True
     assert lesson["visual_status"]["present"] is False
-    assert "missing_visual_analysis" in lesson["cross_validation"]["flags"]
+    assert "missing_visual_analysis" not in lesson["cross_validation"]["flags"]
     assert "manual_review_required" in lesson["cross_validation"]["flags"]
     assert audit["coverage_summary"]["unmatched_documents"] == 1
+
+
+def test_build_audit_auto_mode_does_not_require_visual_analysis_for_transcript_only_materials(tmp_path: Path) -> None:
+    course_dir = tmp_path / "course"
+    write_json(
+        course_dir / "transcripts" / "lesson1_transcript.json",
+        {
+            "video_name": "lesson1",
+            "duration": 1800,
+            "full_text": "这是一段完整的音频课程转录，资料里没有提供视频画面分析。",
+        },
+    )
+
+    audit = build_audit("Audio Course", course_dir)
+
+    lesson = audit["lessons"][0]
+    assert lesson["cross_validation"]["policy"]["required"] is False
+    assert "missing_visual_analysis" not in lesson["cross_validation"]["flags"]
+    assert "manual_review_required" not in lesson["cross_validation"]["flags"]
+    assert "single_source_available" in lesson["cross_validation"]["flags"]
+
+
+def test_build_audit_strict_mode_requires_cross_source_review(tmp_path: Path) -> None:
+    course_dir = tmp_path / "course"
+    write_json(
+        course_dir / "transcripts" / "lesson1_transcript.json",
+        {
+            "video_name": "lesson1",
+            "duration": 1800,
+            "full_text": "这是一段完整的课程转录，但严格模式要求检查是否缺少其他来源。",
+        },
+    )
+
+    audit = build_audit("Strict Course", course_dir, audit_mode="strict")
+
+    lesson = audit["lessons"][0]
+    assert lesson["cross_validation"]["policy"]["required"] is True
+    assert "missing_visual_analysis" in lesson["cross_validation"]["flags"]
+    assert "manual_review_required" in lesson["cross_validation"]["flags"]
 
 
 def test_write_audit_creates_json_and_markdown(tmp_path: Path) -> None:
