@@ -2,11 +2,12 @@
 
 # Lineage Skill
 
-**Turn a dense course into a source-backed, transferable, output-producing private method system.**
+**Turn a dense course, book, or long-form learning source into a source-backed, transferable, output-producing private method system.**
 
 Extract judgment frameworks, case experience, operating processes, and quality
-standards from videos, handouts, whiteboards, transcripts, and notes, then let an
-Agent carry the teacher's method into your learning, decisions, and work output.
+standards from videos, books, handouts, whiteboards, transcripts, and notes, then
+let an Agent carry the teacher's or author's method into your learning,
+decisions, and work output.
 
 For Codex / Claude Code / OpenClaw / Hermes / custom Agents.
 
@@ -19,59 +20,97 @@ For Codex / Claude Code / OpenClaw / Hermes / custom Agents.
 
 ---
 
+## 2026-06-24 Update
+
+This update moves `lineage-skill` from a course mentor generator toward a
+course/book/long-form method system generator:
+
+- **Book and long-form source support**: books, chaptered Markdown, OCR text,
+  notes, and course materials can use the same distillation pipeline.
+- **Capability asset extraction**: in addition to concepts, methods, cases, and
+  quotes, packages now extract `diagnostics`, `workflows`, `rubrics`,
+  `templates`, `transfer_rules`, and `failure_modes`.
+- **OKF-compatible knowledge bundle**: generated Skills now include
+  `references/okf/`, a Markdown + frontmatter bundle for progressive reading,
+  human review, cross-tool exchange, and concept graph navigation.
+- **Stronger provenance lookup**: `scripts/fetch_course_evidence.py` can fetch
+  source chunks and related evidence cards by `chunk_id` or `card_id`.
+- **Multi-course capability preservation**: merged packages keep capability
+  fields and source-course boundaries instead of flattening disagreements.
+
+### What Does "Capability Asset Extraction" Mean?
+
+A normal summary answers "what does this book/course say?" Capability asset
+extraction goes further: it turns the source into reusable methods the Agent can
+apply.
+
+| Field | Meaning | Use |
+| --- | --- | --- |
+| `diagnostics` | Diagnostic rules | Identify where a problem is stuck, such as unclear goals, missing resources, weak feedback, or broken execution. |
+| `workflows` | Execution flows | Convert the teacher's or author's method into repeatable steps. |
+| `rubrics` | Quality standards | Check whether a plan, article, workflow, or decision output is good enough. |
+| `templates` | Reusable templates | Capture tables, scripts, structures, checklists, and worksheets. |
+| `transfer_rules` | Transfer rules | Explain how to adapt cases or methods from the source to the user's real situation. |
+| `failure_modes` | Failure conditions and misuses | Show when the method should not be used, how it can fail, and which missing conditions require caution. |
+
+The generated Skill can therefore do more than repeat content: it can diagnose,
+design workflows, produce templates, evaluate quality, transfer methods, and
+flag misuse risks.
+
 ## What Is This?
 
-`lineage-skill` is a course distillation Skill for Agents. It turns a complete
-set of videos, bootcamps, lectures, PDF handouts, whiteboards, screenshots,
-transcripts, and learning notes into an installable, callable, source-backed
-course mentor Skill.
+`lineage-skill` is a course and book distillation Skill for Agents. It turns a
+complete set of videos, books, bootcamps, lectures, PDF handouts, whiteboards,
+screenshots, transcripts, and learning notes into an installable, callable,
+source-backed mentor or method Skill.
 
-It is not "summarize this course." It turns the course into a long-lived
+It is not "summarize this course/book." It turns the source material into a long-lived
 knowledge asset:
 
-- Preserve the teacher's intent: important claims can trace back to lessons,
-  source text, screenshots, or handouts.
-- Rebuild the course structure: organize scattered videos, handouts, cases, and
-  notes into concepts, methods, lesson indexes, and evidence maps.
+- Preserve the source intent: important claims can trace back to lessons,
+  chapters, source text, screenshots, or handouts.
+- Rebuild the material structure: organize scattered videos, book chapters,
+  handouts, cases, and notes into concepts, methods, lesson/chapter indexes,
+  and evidence maps.
 - Generate a usable mentor: let an Agent answer, quiz, review, rehearse, and
-  locate sources from the course.
-- Produce work assets: turn the teacher's method into checklists, playbooks,
-  templates, drafts, and quality criteria.
+  locate sources from the material.
+- Produce work assets: turn the teacher's or author's method into checklists,
+  playbooks, templates, drafts, and quality criteria.
 
-In one sentence: turn "I bought, watched, or studied a course" into "I have a
-course mentor I can call on at any time."
+In one sentence: turn "I bought, watched, or studied a course/book" into "I have
+a private method system I can call on at any time."
 
 ## Core Value After Distillation
 
-The expensive part of a serious course is usually not the list of facts. It is
-the teacher's judgment framework, way of decomposing problems, case experience,
-and implicit quality standards.
+The expensive part of a serious course or book is usually not the list of facts.
+It is the teacher's or author's judgment framework, way of decomposing problems,
+case experience, and implicit quality standards.
 
 `lineage-skill` extracts those from tens or hundreds of hours of material and
 turns them into Agent-callable capabilities:
 
-| Value | What The Course Becomes |
+| Value | What The Course/Book Becomes |
 | --- | --- |
-| **From content consumption to method asset** | Not just "I watched the course", but a concept system, decision criteria, operating process, case library, and template library. |
-| **From one-time learning to long-term coaching** | The Agent can question, review, and find weak spots according to your progress, turning the course into a training system. |
+| **From content consumption to method asset** | Not just "I watched the course/read the book", but a concept system, decision criteria, operating process, case library, and template library. |
+| **From one-time learning to long-term coaching** | The Agent can question, review, and find weak spots according to your progress, turning the material into a training system. |
 | **From vague memory to source-backed knowledge** | Important claims can trace back to lessons, source text, screenshots, or handouts, so your interpretation does not silently replace the teacher's intent. |
 | **From understanding ideas to producing work** | Apply the teacher's method to real situations: draft plans, check plans, design workflows, write templates, and support decisions. |
 
 In other words, the point is not:
 
-> Summarize this course for me.
+> Summarize this course/book for me.
 
 The point is:
 
-> Turn a dense course into a private method system that can keep helping me learn, judge, and produce work.
+> Turn a dense course, book, or long-form source into a private method system that can keep helping me learn, judge, and produce work.
 
 ## Typical Output Scenarios
 
 | Scenario | Result You Actually Want | Example |
 | --- | --- | --- |
-| **Master the course** | Recover the through-line, hard parts, traps, and weak spots; let the Agent challenge you like a mentor | "I finished the first 5 lessons. Check where my understanding is still incomplete according to the teacher's system." |
+| **Master the course/book** | Recover the through-line, hard parts, traps, and weak spots; let the Agent challenge you like a mentor | "I finished the first 5 lessons / 3 chapters. Check where my understanding is still incomplete according to the source system." |
 | **Trace the source intent** | Locate where a claim, case, or method came from, with quote or screenshot evidence when available | "Did the teacher actually say this? If yes, which lesson was it in and what was the original point?" |
-| **Transfer the teacher's method** | Apply course frameworks to your concrete situation instead of merely repeating concepts | "Use this course's method to analyze my business scenario and identify the key judgments and gaps." |
+| **Transfer the teacher's or author's method** | Apply source frameworks to your concrete situation instead of merely repeating concepts | "Use this material's method to analyze my business scenario and identify the key judgments and gaps." |
 | **Produce reusable assets** | Generate checklists, playbooks, templates, drafts, and quality criteria you can use repeatedly | "Turn the teacher's method into a workflow and checklist I can reuse on every project." |
 
 ## Optional Roles
@@ -91,14 +130,14 @@ Other dimensions:
 
 | Dimension | Options |
 | --- | --- |
-| Course scope | Single course, multi-course with boundaries, multi-course fusion |
+| Source scope | Single course/book, multi-source with boundaries, multi-source fusion |
 | Evidence strategy | Standard citations, strict source tracing |
 | Learning progress | No progress tracking, or track progress and adjust plans |
 
 You can combine roles:
 
 ```text
-Turn this course into mentor,practitioner roles.
+Turn this course/book into mentor,practitioner roles.
 It should help me study like a mentor and also produce practical checklists.
 ```
 
@@ -133,9 +172,9 @@ steps, templates, and mentor capabilities.
 
 ## Capabilities
 
-This Skill includes the main pipeline needed for course distillation. You do not
-need to design the whole "video course to mentor" workflow yourself. Provide the
-course materials and configure suitable model interfaces.
+This Skill includes the main pipeline needed for course and book distillation.
+You do not need to design the whole "video course or book to method Skill" workflow
+yourself. Provide the source materials and configure suitable model interfaces.
 
 | Capability | What It Does | Output |
 | --- | --- | --- |
@@ -144,8 +183,11 @@ course materials and configure suitable model interfaces.
 | Large video handling | Compresses and chunks large videos to reduce upload and analysis pressure | Chunked analysis results |
 | Model-selected keyframes | Builds a dense candidate pool, then asks a multimodal vision model to choose evidence-worthy keyframes from labeled contact sheets; equal intervals are only candidates, not the final evidence rule | `keyframe_selection/`, `keyframes_model_selected/` |
 | PDF / document parsing | Integrates MinerU or other OCR/document parsing outputs for scanned PDFs, image PDFs, and handouts | `documents/`, `mineru_supplement.md` |
-| Course distillation | Combines transcripts, visual analysis, model-selected keyframes, OCR, and notes into concepts, methods, cases, and citations | `course_distillation_*.md/json` |
-| CoursePackage build | Converts distillation results into a unified structure with evidence map, lesson index, and quality metadata | `course_package.json` |
+| Pure text / book distillation | Chunks Markdown, TXT, OCR Markdown, notes, book chapters, and handouts into source-backed evidence cards | `text_sources/`, `text_distillation/evidence_cards.jsonl` |
+| Capability asset extraction | Extracts diagnostics, workflows, rubrics, templates, transfer rules, and failure modes from courses and books | capability fields in `course_package.json` |
+| Course/book distillation | Combines transcripts, visual analysis, model-selected keyframes, OCR, and notes into concepts, methods, cases, and citations | `course_distillation_*.md/json` |
+| CoursePackage build | Converts distillation results into a unified structure with evidence map, lesson/chapter index, and quality metadata | `course_package.json` |
+| OKF bundle export | Exports structured capability assets into a progressive Markdown + frontmatter knowledge bundle | `references/okf/` |
 | Multi-course merge | Combines multiple course packages into one cross-course Skill input | combined `course_package.json` |
 | Dedicated mentor Skill generation | Generates `mentor` by default; other roles are also supported | Installable/callable course Skill |
 | Resume and progress tracking | Records stage state, existing artifacts, and next steps so runs can resume | `lineage_progress.json` |
@@ -161,14 +203,14 @@ Send this to your Agent:
 Please install this Skill:
 https://raw.githubusercontent.com/JuneYaooo/lineage-skill/main/docs/install.md
 
-After installation, tell me how I can turn my course materials into a course expert.
+After installation, tell me how I can turn my course/book materials into a method expert.
 ```
 
 ### 2. Configure Materials, Tools, And Model Interfaces
 
 Everything commonly needed is listed here. `docs/install.md` is kept only for Agent-driven installation.
 
-- **Course materials**: videos, audio, PDFs, handouts, screenshots, transcripts, OCR output, and notes.
+- **Course/book materials**: videos, audio, books or chaptered Markdown, PDFs, handouts, screenshots, transcripts, OCR output, and notes.
 - **Local tools**: `git`, `python3`, `pip`, plus `ffmpeg` / `ffprobe` when processing videos or raw audio.
 - **Model interfaces**: OpenAI-compatible speech-to-text, vision, text distillation, and optional MinerU OCR.
 
@@ -208,6 +250,7 @@ Minimum setup depends on the materials:
 | Materials | Minimum setup |
 | --- | --- |
 | Existing transcripts, OCR, and notes | `LINEAGE_TEXT_*`; use `DISTILL_USE_LLM=0` for local extractive fallback |
+| Pure Markdown / TXT / book chapters / notes | `LINEAGE_TEXT_*`; `DISTILL_USE_LLM=0` can be used for local evidence-card extraction |
 | Audio course | `AUDIO_TRANSCRIBE_*`, `LINEAGE_TEXT_*`, and `ffmpeg` |
 | Video course, speech only | `AUDIO_TRANSCRIBE_*`, `LINEAGE_TEXT_*`, and `ffmpeg` |
 | Video course with slides / boards / screen demos | `AUDIO_TRANSCRIBE_*`, `LINEAGE_VISION_*`, `LINEAGE_TEXT_*`, and `ffmpeg` |
@@ -230,16 +273,24 @@ I already have course transcripts, OCR documents, and study notes.
 Skip fresh capture and package them directly into a source-backed, reviewable course Skill.
 ```
 
+If the material is a book or long-form text source:
+
+```text
+I have chaptered Markdown / OCR text from a book.
+Use lineage-skill to distill it into a source-backed, transferable, output-producing method Skill.
+Prioritize diagnostics, workflows, rubrics, templates, transfer rules, and failure modes.
+```
+
 ### 4. Use Natural Language
 
-After the Skill is generated, it behaves like a mentor focused on this course:
+After the Skill is generated, it behaves like a mentor or method system focused on this source material:
 
 ```text
 I finished the first 5 lessons. Review my understanding through the teacher's system and challenge the key judgments I may have missed.
 ```
 
 ```text
-Use this course's method to analyze the real project below. Identify the key assumptions, judgment steps, and risks.
+Use this material's method to analyze the real project below. Identify the key assumptions, judgment steps, and risks.
 ```
 
 ```text
@@ -247,11 +298,11 @@ Turn the teacher's method into a reusable playbook: use cases, inputs, steps, re
 ```
 
 ```text
-Is this conclusion actually grounded in the course? Give me the lesson, source gist, evidence strength, and which parts are inference.
+Is this conclusion actually grounded in the source material? Give me the lesson/chapter, source gist, evidence strength, and which parts are inference.
 ```
 
 ```text
-Use the teacher's quality criteria to review my plan. Tell me where it skips steps, lacks evidence, or drifts from the course method.
+Use the source's quality criteria to review my plan. Tell me where it skips steps, lacks evidence, or drifts from the source method.
 ```
 
 ## Open Source Attribution
@@ -266,6 +317,7 @@ projects in this repository's Issues.
 ## Acknowledgements
 
 - [Datawhale](https://github.com/datawhalechina) — thanks to the Datawhale open-source community for its long-running work in AI education, open courses, and learner-centered community building.
+- [rfeng1016](https://github.com/rfeng1016) — thanks for the reminder and recommendation around OKF, which led to adding the OKF-compatible knowledge bundle to this project.
 - [LINUX DO — Chinese Developer Community](https://linux.do/) — thanks to the LINUX DO community for discussion, feedback, and distribution support. The community is also a good place to discuss course distillation and Agent Skill practice.
 
 ## License

@@ -165,6 +165,27 @@ Resume behavior:
 - Candidate frames are cache artifacts. They can be regenerated from source video and should not be required in generated Skills.
 - The generated Skill should package `keyframe_selection/` and `keyframes_model_selected/`, not raw video or dense candidates.
 
+## Final Distillation Audit
+
+After course distillation and before package building, generate final audit files:
+
+```text
+distillation_audit.json
+distillation_audit.md
+```
+
+The audit records per-lesson transcript status, visual-analysis status, document/OCR/text status, selected-keyframe counts, traceability paths, audit policy, cross-source validation flags, terminology risks, and manual-review recommendations.
+
+Cross-source validation is material-aware:
+
+- `--audit-mode auto` validates across sources only when comparable sources are available for a lesson. Transcript-only, audio-only, or text-only materials are not treated as incomplete merely because visual analysis or courseware is absent.
+- `--audit-mode strict` requires review of missing or conflicting sources and is selected automatically by the full pipeline when `--evidence strict` is used.
+- `--audit-mode off` records inventory, traceability, and extraction quality without cross-source mismatch flags.
+
+If transcripts, video analysis, and courseware/text sources are all present, the audit should mark multi-source support, mismatches, source-only claims, and items requiring human review instead of treating all sources as equivalent.
+
+The package builder reads `distillation_audit.json` when present and writes a compact `quality.distillation_audit` summary into `course_package.json`. Generated Skills should copy both audit files into `references/` and use them before treating a lesson as complete.
+
 ## Outputs And Resume
 
 Course build state belongs under `<base-dir>/<course-name>/`; generated Skills belong under `<output-dir>/<skill-name>/`.
@@ -189,6 +210,8 @@ Expected course workspace:
 ├── lesson_summaries.json
 ├── course_distillation_<date>.md
 ├── course_distillation_<date>.json
+├── distillation_audit.json
+├── distillation_audit.md
 ├── course_package.json
 └── lineage_progress.json
 ```
@@ -206,6 +229,8 @@ Generated Skill evidence layout:
 ```text
 <generated-skill>/references/
 ├── course_package.json
+├── distillation_audit.json
+├── distillation_audit.md
 ├── evidence_map.json
 ├── keyframe_selection/
 ├── keyframes_model_selected/

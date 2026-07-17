@@ -16,6 +16,7 @@ STAGE_ORDER = [
     "documents",
     "text_distill",
     "distill",
+    "audit",
     "package",
     "build_skill",
     "catalog",
@@ -56,6 +57,8 @@ def summarize_artifacts(course_dir: Path, skill_dir: Path | None = None) -> dict
     distillations = sorted(course_dir.glob("course_distillation_*.*"))
     summary_path = course_dir / "lesson_summaries.json"
     package_path = course_dir / "course_package.json"
+    audit_json = course_dir / "distillation_audit.json"
+    audit_markdown = course_dir / "distillation_audit.md"
     mineru_manifest = course_dir / "documents" / "mineru_manifest.json"
     mineru_supplement = course_dir / "documents" / "mineru_supplement.md"
     return {
@@ -76,6 +79,8 @@ def summarize_artifacts(course_dir: Path, skill_dir: Path | None = None) -> dict
         "lesson_summaries": summary_path.exists(),
         "course_distillations": len(distillations),
         "course_package": package_path.exists(),
+        "distillation_audit_json": audit_json.exists(),
+        "distillation_audit_markdown": audit_markdown.exists(),
         "generated_skill": bool(skill_dir and skill_dir.exists()),
     }
 

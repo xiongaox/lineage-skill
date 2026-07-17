@@ -61,6 +61,14 @@ def should_run_media_capture(args: argparse.Namespace) -> bool:
     return bool(args.input_dir)
 
 
+def resolve_audit_mode(args: argparse.Namespace) -> str:
+    if args.audit_mode != "auto":
+        return args.audit_mode
+    if args.evidence == "strict":
+        return "strict"
+    return "auto"
+
+
 def skip_stage(
     *,
     stage: str,
@@ -202,6 +210,13 @@ def main() -> None:
     parser.add_argument("--skip-distill", action="store_true")
     parser.add_argument("--skip-summaries", action="store_true", help="Pass through to distill_course.py to reuse lesson_summaries.json.")
     parser.add_argument("--skip-package", action="store_true")
+    parser.add_argument("--skip-audit", action="store_true")
+    parser.add_argument(
+        "--audit-mode",
+        choices=["auto", "strict", "off"],
+        default="auto",
+        help="Audit cross-validation policy. auto validates only when comparable sources exist; strict requires missing-source review; off records inventory only. With --evidence strict, auto resolves to strict.",
+    )
     parser.add_argument("--skip-build-skill", action="store_true")
     parser.add_argument("--limit", type=int, default=0, help="Limit media count for transcribe/analyze smoke runs.")
     args = parser.parse_args()
@@ -214,6 +229,7 @@ def main() -> None:
     output_dir = Path(args.output_dir).expanduser().resolve()
     course_dir = base_dir / args.course_name
     args.skill_name = args.skill_name or default_skill_name(args.course_name, parse_modes(args.mode))
+    audit_mode = resolve_audit_mode(args)
     force = ["--force"] if args.force else []
     limit = ["--limit", str(args.limit)] if args.limit > 0 else []
 
@@ -377,6 +393,24 @@ def main() -> None:
         ],
         args.skip_distill,
         stage="distill",
+        args=args,
+        base_dir=base_dir,
+        output_dir=output_dir,
+        course_dir=course_dir,
+    )
+    run(
+        [
+            py,
+            str(ROOT / "scripts" / "build_distillation_audit.py"),
+            "--course-name",
+            args.course_name,
+            "--source-dir",
+            str(course_dir),
+            "--audit-mode",
+            audit_mode,
+        ],
+        args.skip_audit,
+        stage="audit",
         args=args,
         base_dir=base_dir,
         output_dir=output_dir,
